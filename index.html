@@ -1,0 +1,2937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKX AI PAL — Interactive Prototype</title>
+<style>
+/* === RESET & BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #111; }
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #111;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === DEMO TAB BAR (outside phone) === */
+.demo-tabs {
+  display: flex;
+  gap: 6px;
+  max-width: 460px;
+  width: 100%;
+  padding: 0 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.demo-tab {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  color: #999;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.demo-tab:hover { border-color: #555; color: #ccc; }
+.demo-tab.active { background: #CDFF00; color: #000; border-color: #CDFF00; }
+
+/* === DEVICE FRAME === */
+.device {
+  width: 430px;
+  max-width: 100%;
+  height: 860px;
+  background: #000;
+  border-radius: 40px;
+  border: 3px solid #333;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* === PHONE STATUS BAR === */
+.phone-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 28px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+.phone-status .notch {
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 0 0 20px 20px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #222;
+  border-top: none;
+}
+
+/* === TOP SECTION (balance header — compact) === */
+.top-section {
+  padding: 12px 24px 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #111;
+}
+.top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.top-left { flex: 1; }
+.ai-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #CDFF00;
+  margin-bottom: 4px;
+}
+.ai-status .dot {
+  width: 6px; height: 6px;
+  background: #CDFF00;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(205,255,0,.4); }
+  50% { opacity: .7; box-shadow: 0 0 0 6px rgba(205,255,0,0); }
+}
+.balance { font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+.balance-change { font-size: 13px; color: #4ADE80; margin-top: 2px; }
+.balance-change.neg { color: #F87171; }
+/* Plus/More button */
+.plus-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid #333;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.plus-btn:hover { border-color: #CDFF00; color: #CDFF00; background: rgba(205,255,0,.05); }
+.plus-btn:active { transform: scale(.92); }
+/* Keep .top-btn for reuse in other contexts */
+.top-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all .2s;
+}
+.top-btn:hover { border-color: #555; background: #222; }
+
+/* === EXPLORE MENU OVERLAY === */
+.explore-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0; top: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.explore-overlay.open { display: flex; }
+.explore-backdrop {
+  flex: 1;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+}
+.explore-sheet {
+  background: #111;
+  border-top: 1px solid #333;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 24px 32px;
+  animation: sheetUp .25s ease;
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.explore-sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: center;
+  color: #999;
+}
+.explore-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.explore-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  border-radius: 16px;
+  background: #1A1A1A;
+  border: 1px solid #333;
+  cursor: pointer;
+  transition: all .2s;
+}
+.explore-item:hover { border-color: #555; background: #222; }
+.explore-item:active { transform: scale(.96); }
+.explore-item .ei-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.explore-item .ei-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ccc;
+}
+
+/* === SUBSCRIPTION PLAN CARDS === */
+.sub-plan-card.selected { border-color: #CDFF00 !important; background: #1A1A1A !important; }
+.sub-plan-card:not(.selected) { opacity: .6; }
+.sub-plan-card:hover:not(.selected) { opacity: .8; border-color: #555 !important; }
+
+/* === TRANSFER VIEW === */
+.transfer-toggle {
+  display: flex;
+  gap: 0;
+  background: #1A1A1A;
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 20px;
+}
+.transfer-toggle-btn {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #666;
+  background: transparent;
+  border: none;
+  transition: all .2s;
+  font-family: inherit;
+}
+.transfer-toggle-btn.active { background: #333; color: #fff; }
+.transfer-account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.transfer-account-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.transfer-arrow {
+  text-align: center;
+  font-size: 20px;
+  color: #CDFF00;
+  padding: 8px 0;
+}
+.transfer-amount-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  margin: 16px 0;
+}
+.transfer-amount-input:focus { border-color: #CDFF00; }
+.transfer-amount-input::placeholder { color: #444; }
+.transfer-quick-amounts {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.transfer-quick-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1A1A1A;
+  color: #999;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all .2s;
+  font-family: inherit;
+}
+.transfer-quick-btn:hover { border-color: #CDFF00; color: #CDFF00; }
+
+/* === MIDDLE CONTENT === */
+.middle-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 16px;
+  scrollbar-width: none;
+  min-height: 0;
+  position: relative;
+}
+.middle-section::-webkit-scrollbar { display: none; }
+
+/* === BOTTOM CHAT BAR (floating when content overflows) === */
+.bottom-bar {
+  padding: 10px 24px 26px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,.06);
+  position: relative;
+  z-index: 10;
+}
+.bottom-bar.floating {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.6);
+}
+.chat-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 28px;
+  padding: 6px 8px 6px 18px;
+}
+.chat-input-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+}
+.chat-input-wrap input::placeholder { color: #666; }
+.chat-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.mic-btn { background: transparent; color: #666; }
+.mic-btn:hover { color: #999; }
+.send-btn { background: #CDFF00; color: #000; }
+.send-btn:hover { background: #B8E600; transform: scale(1.05); }
+
+/* === SENT MESSAGE BUBBLE === */
+.sent-bubble {
+  background: #CDFF00;
+  color: #000;
+  padding: 10px 16px;
+  border-radius: 20px 20px 4px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  max-width: 80%;
+  margin-left: auto;
+  margin-bottom: 12px;
+  animation: fadeSlideIn .3s ease;
+}
+
+/* === PILL TABS (inside middle) === */
+.pill-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.pill-tabs::-webkit-scrollbar { display: none; }
+.pill-tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  background: #1A1A1A;
+  border: 1px solid #333;
+  color: #999;
+  transition: all .2s;
+}
+.pill-tab:hover { color: #ccc; border-color: #555; }
+.pill-tab.active { background: #CDFF00; color: #000; border-color: #CDFF00; }
+
+/* === CARDS === */
+.card {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.card-subtitle {
+  font-size: 13px;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* === BUTTONS === */
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  border-radius: 24px;
+  background: #CDFF00;
+  color: #000;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.btn-primary:hover { background: #B8E600; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 24px;
+  background: transparent;
+  color: #CDFF00;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #CDFF00;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.btn-secondary:hover { background: rgba(205,255,0,.08); }
+.btn-danger {
+  width: 100%;
+  padding: 16px;
+  border-radius: 24px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.btn-danger:hover { background: #DC2626; transform: translateY(-1px); }
+
+/* === CHECKLIST === */
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #ccc;
+  line-height: 1.4;
+}
+.check-icon {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  background: rgba(205,255,0,.15);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: #CDFF00;
+}
+
+/* === AGENT FEED === */
+.agent-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #1A1A1A;
+  animation: fadeSlideIn .4s ease both;
+}
+.agent-item:last-child { border-bottom: none; }
+.agent-icon {
+  font-size: 20px;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.agent-icon.analyst { background: rgba(6,182,212,.15); }
+.agent-icon.strategist { background: rgba(139,92,246,.15); }
+.agent-icon.sentinel { background: rgba(16,185,129,.15); }
+.agent-icon.executor { background: rgba(245,158,11,.15); }
+.agent-icon.tracker { background: rgba(168,85,247,.15); }
+.agent-body { flex: 1; min-width: 0; }
+.agent-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.agent-name .live-dot {
+  width: 6px; height: 6px;
+  background: #4ADE80;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+.agent-msg { font-size: 13px; color: #ccc; line-height: 1.5; }
+.agent-time { font-size: 11px; color: #555; margin-top: 4px; }
+.agent-left-border {
+  width: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* === PROGRESS BAR === */
+.progress-bar-wrap {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+.progress-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+  transition: background .3s;
+}
+.progress-seg.done { background: #CDFF00; }
+.progress-seg.current { background: #CDFF00; opacity: .5; }
+
+/* === CONFIG ROW === */
+.config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #222;
+}
+.config-row:last-child { border-bottom: none; }
+.config-label { font-size: 14px; color: #999; }
+.config-value { font-size: 14px; font-weight: 600; color: #fff; }
+
+/* === STRATEGY CARD === */
+.strategy-card {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.strategy-card:hover { border-color: #555; }
+.strategy-card.selected { border-color: #CDFF00; background: rgba(205,255,0,.03); }
+.strategy-card .tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.tag.recommended { background: rgba(205,255,0,.15); color: #CDFF00; }
+.tag.risk-low { background: rgba(34,197,94,.12); color: #4ADE80; }
+.tag.risk-mid { background: rgba(251,191,36,.12); color: #FBB524; }
+.tag.risk-high { background: rgba(239,68,68,.12); color: #F87171; }
+
+/* === MODE CARD === */
+.mode-card {
+  background: #1A1A1A;
+  border: 2px solid #333;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all .25s;
+  text-align: center;
+}
+.mode-card:hover { border-color: #555; }
+.mode-card.selected { border-color: #CDFF00; background: rgba(205,255,0,.03); }
+.mode-card .mode-icon { font-size: 32px; margin-bottom: 8px; }
+.mode-card .mode-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.mode-card .mode-tag {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  background: rgba(205,255,0,.12);
+  color: #CDFF00;
+}
+.mode-card .mode-desc { font-size: 13px; color: #999; }
+
+/* === TRADE HISTORY === */
+.trade-item {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: all .2s;
+}
+.trade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+.trade-header:hover { background: #222; }
+.trade-title { font-size: 14px; font-weight: 600; }
+.trade-meta { font-size: 12px; color: #666; margin-top: 3px; }
+.trade-status { font-size: 12px; color: #4ADE80; font-weight: 600; }
+.trade-detail {
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: all .3s ease;
+}
+.trade-detail.open {
+  padding: 0 16px 14px;
+  max-height: 200px;
+}
+.trade-detail p {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.7;
+  border-top: 1px solid #333;
+  padding-top: 10px;
+}
+
+/* === CHART === */
+.fake-chart {
+  width: 100%;
+  height: 160px;
+  position: relative;
+  margin: 16px 0;
+  overflow: hidden;
+}
+.fake-chart svg { width: 100%; height: 100%; }
+.time-pills {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+}
+.time-pill {
+  flex: 1;
+  text-align: center;
+  padding: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all .2s;
+}
+.time-pill.active { background: #1A1A1A; color: #CDFF00; }
+.time-pill:hover { color: #999; }
+
+/* === PNL TABLE === */
+.pnl-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #1A1A1A;
+  font-size: 14px;
+}
+.pnl-row:last-child { border-bottom: none; }
+.pnl-name { color: #ccc; }
+.pnl-value { color: #4ADE80; font-weight: 600; }
+
+/* === MARKET CARD === */
+.market-card {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.market-card .coin-name { font-weight: 700; font-size: 15px; }
+.market-card .coin-pair { font-size: 12px; color: #666; }
+.market-card .coin-price { font-weight: 700; font-size: 15px; text-align: right; }
+.market-card .coin-change { font-size: 12px; text-align: right; }
+.market-card .coin-change.up { color: #4ADE80; }
+.market-card .coin-change.down { color: #F87171; }
+.market-card .coin-detail { font-size: 11px; color: #666; margin-top: 2px; }
+.mini-spark { width: 60px; height: 24px; }
+
+/* === SUB TABS === */
+.sub-tabs {
+  display: flex;
+  gap: 0;
+  background: #1A1A1A;
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.sub-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #666;
+  transition: all .2s;
+}
+.sub-tab.active { background: #333; color: #fff; }
+
+/* === WELCOME HERO (Demo 1 screen 1) === */
+.welcome-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.welcome-screen::-webkit-scrollbar { display: none; }
+.welcome-hero {
+  text-align: center;
+  padding: 20px 24px;
+}
+.welcome-hero .robot {
+  width: 120px; height: 120px;
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px;
+  margin: 0 auto 20px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.welcome-hero h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff, #CDFF00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.welcome-hero p { font-size: 14px; color: #999; }
+
+/* === TUTORIAL CARD === */
+.tut-card {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  transition: all .3s;
+}
+.tut-card:hover { border-color: #555; }
+.tut-emoji { font-size: 28px; flex-shrink: 0; }
+.tut-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.tut-card p { font-size: 13px; color: #999; line-height: 1.4; }
+
+/* === AMOUNT SELECTOR === */
+.amount-display {
+  text-align: center;
+  padding: 24px 0;
+}
+.amount-display .amount {
+  font-size: 48px;
+  font-weight: 700;
+  color: #CDFF00;
+}
+.amount-display .label { font-size: 13px; color: #666; margin-top: 4px; }
+.amount-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #CDFF00 50%, #333 50%);
+  outline: none;
+  margin: 16px 0;
+}
+.amount-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #CDFF00;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(205,255,0,.3);
+}
+
+/* === BALANCE SUMMARY === */
+.balance-summary {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+.bal-item {
+  flex: 1;
+  background: #111;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+.bal-item .bal-label { font-size: 11px; color: #666; }
+.bal-item .bal-val { font-size: 14px; font-weight: 700; margin-top: 2px; }
+
+/* === STEP/SECTION LABELS === */
+.step-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.section-desc {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* === CELEBRATION === */
+.celebration {
+  text-align: center;
+  padding: 40px 0;
+}
+.celebration .big-emoji { font-size: 64px; margin-bottom: 16px; }
+.celebration h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+.celebration p { color: #999; font-size: 14px; line-height: 1.5; }
+
+/* === WRITE OWN TEXTAREA === */
+.strat-textarea {
+  width: 100%;
+  min-height: 120px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 14px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+.strat-textarea:focus { border-color: #CDFF00; }
+.strat-textarea::placeholder { color: #555; }
+
+/* === BAD DAY: TIMELINE === */
+.timeline-item {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 20px;
+  animation: fadeSlideIn .5s ease both;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  width: 2px;
+  height: calc(100% + 8px);
+  background: #333;
+}
+.timeline-item:last-child::before { display: none; }
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #333;
+  border: 2px solid #000;
+}
+.timeline-item.red::after { background: #F87171; box-shadow: 0 0 8px rgba(248,113,113,.4); }
+.timeline-item.green::after { background: #4ADE80; box-shadow: 0 0 8px rgba(74,222,128,.4); }
+.timeline-item.yellow::after { background: #FBB524; }
+.timeline-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 6px;
+}
+.alert-card {
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+}
+.alert-card.red-alert {
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.3);
+}
+.alert-card.green-alert {
+  background: rgba(74,222,128,.06);
+  border: 1px solid rgba(74,222,128,.25);
+}
+.alert-card.yellow-alert {
+  background: rgba(251,191,36,.06);
+  border: 1px solid rgba(251,191,36,.2);
+}
+
+/* === NOTIFICATION MOCK === */
+.notif-mock {
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.notif-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: #CDFF00;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.notif-app { font-size: 11px; color: #999; font-weight: 600; }
+.notif-title { font-size: 13px; font-weight: 700; margin: 2px 0; }
+.notif-body { font-size: 12px; color: #999; line-height: 1.4; }
+
+/* === COMPARISON BAR === */
+.compare-bars { margin: 16px 0; }
+.compare-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.compare-label { font-size: 12px; width: 80px; color: #999; }
+.compare-track {
+  flex: 1;
+  height: 24px;
+  background: #1A1A1A;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.compare-fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: width 1.5s ease;
+}
+.compare-fill.you { background: #CDFF00; color: #000; }
+.compare-fill.market { background: #F87171; color: #fff; }
+
+/* === SENTINEL ACTIONS === */
+.sentinel-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #ccc;
+}
+.sentinel-action .sa-check { color: #4ADE80; }
+
+/* === RESULT STATS === */
+.result-stat {
+  text-align: center;
+  padding: 8px 0;
+}
+.result-stat .rs-value { font-size: 28px; font-weight: 800; }
+.result-stat .rs-label { font-size: 12px; color: #999; margin-top: 2px; }
+.result-stat.green .rs-value { color: #4ADE80; }
+.result-stat.amber .rs-value { color: #FBB524; }
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+/* === ALLOC ROW === */
+.alloc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #1A1A1A;
+}
+.alloc-row:last-child { border-bottom: none; }
+.alloc-pct {
+  width: 40px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #CDFF00;
+}
+.alloc-name { flex: 1; font-size: 14px; }
+.alloc-note { font-size: 11px; color: #666; }
+
+/* === INSIGHT ROW === */
+.insight-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.4;
+}
+.insight-icon { flex-shrink: 0; font-size: 14px; }
+
+/* === AGENT OFFICE === */
+.office-scene {
+  position: relative;
+  background: #0D0D0D;
+  border-radius: 16px;
+  border: 1px solid #222;
+  padding: 16px 12px;
+  margin-bottom: 12px;
+  min-height: 200px;
+  overflow: hidden;
+}
+.office-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.office-title-bar h3 { font-size: 15px; font-weight: 700; }
+.office-status-pill {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: #4ADE80;
+  background: rgba(74,222,128,.08);
+  padding: 4px 10px; border-radius: 20px;
+}
+.office-status-pill .os-dot {
+  width: 6px; height: 6px; background: #4ADE80;
+  border-radius: 50%; animation: pulse 1.5s infinite;
+}
+.cubicle-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cubicle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform .2s;
+  width: 64px;
+}
+.cubicle:hover { transform: translateY(-3px); }
+.cubicle:active { transform: scale(.94); }
+
+/* Labubu character */
+.labubu {
+  width: 52px; height: 62px;
+  position: relative;
+  animation: labubuBob 2.5s ease-in-out infinite;
+}
+.labubu-body {
+  width: 44px; height: 40px;
+  border-radius: 14px 14px 10px 10px;
+  position: absolute;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; justify-content: center;
+}
+.labubu-head {
+  width: 38px; height: 32px;
+  background: #F5E6D3;
+  border-radius: 50% 50% 40% 40%;
+  position: absolute;
+  top: 2px; left: 50%; transform: translateX(-50%);
+  z-index: 2;
+}
+.labubu-ear-l, .labubu-ear-r {
+  width: 10px; height: 16px;
+  background: #F5E6D3;
+  border-radius: 50%;
+  position: absolute;
+  top: -4px; z-index: 1;
+}
+.labubu-ear-l { left: 2px; transform: rotate(-15deg); }
+.labubu-ear-r { right: 2px; transform: rotate(15deg); }
+.labubu-eyes {
+  position: absolute;
+  top: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px;
+}
+.labubu-eye {
+  width: 5px; height: 5px;
+  background: #1A1A1A;
+  border-radius: 50%;
+  animation: labubuBlink 3s infinite;
+}
+@keyframes labubuBlink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+.labubu-mouth {
+  position: absolute;
+  top: 21px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: #D4847A;
+}
+/* OKX Hat */
+.labubu-hat {
+  position: absolute;
+  top: -4px; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 14px;
+  background: #000;
+  border-radius: 4px 4px 0 0;
+  z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 6px; font-weight: 800; color: #fff;
+  letter-spacing: .5px;
+  border: 1px solid #333;
+}
+.labubu-hat::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: -3px; right: -3px;
+  height: 4px;
+  background: #000;
+  border-radius: 2px;
+  border: 1px solid #333;
+  border-top: none;
+}
+/* Desk */
+.labubu-desk {
+  width: 52px; height: 8px;
+  background: #2A2520;
+  border-radius: 3px;
+  position: relative;
+  margin-top: -4px;
+  z-index: 0;
+}
+.labubu-desk::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 8px;
+  width: 16px; height: 4px;
+  background: #444;
+  border-radius: 1px;
+}
+/* Role tag */
+.role-tag {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+/* Agent colors */
+.agent-c-analyst .labubu-body { background: #06B6D4; }
+.agent-c-analyst .role-tag { background: rgba(6,182,212,.15); color: #06B6D4; }
+.agent-c-strategist .labubu-body { background: #8B5CF6; }
+.agent-c-strategist .role-tag { background: rgba(139,92,246,.15); color: #8B5CF6; }
+.agent-c-sentinel .labubu-body { background: #10B981; }
+.agent-c-sentinel .role-tag { background: rgba(16,185,129,.15); color: #10B981; }
+.agent-c-executor .labubu-body { background: #F59E0B; }
+.agent-c-executor .role-tag { background: rgba(245,158,11,.15); color: #F59E0B; }
+.agent-c-tracker .labubu-body { background: #A855F7; }
+.agent-c-tracker .role-tag { background: rgba(168,85,247,.15); color: #A855F7; }
+
+@keyframes labubuBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.cubicle:nth-child(1) .labubu { animation-delay: 0s; }
+.cubicle:nth-child(2) .labubu { animation-delay: .4s; }
+.cubicle:nth-child(3) .labubu { animation-delay: .8s; }
+.cubicle:nth-child(4) .labubu { animation-delay: 1.2s; }
+.cubicle:nth-child(5) .labubu { animation-delay: 1.6s; }
+
+/* Typing animation on desk */
+.typing-dots {
+  display: flex; gap: 2px;
+  position: absolute; top: 1px; right: 6px;
+}
+.typing-dots span {
+  width: 3px; height: 3px;
+  background: #CDFF00;
+  border-radius: 50%;
+  animation: typeDot 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes typeDot {
+  0%, 60%, 100% { opacity: .2; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* Discussion bubble */
+.discuss-bubble-wrap {
+  position: relative;
+  margin: 12px 0 8px;
+  display: none;
+  animation: fadeSlideIn .4s ease;
+}
+.discuss-bubble-wrap.show { display: block; }
+.discuss-bubble {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #ccc;
+  line-height: 1.5;
+  position: relative;
+}
+.discuss-participants {
+  display: flex;
+  gap: -4px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.discuss-avatar {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff;
+  margin-right: -4px;
+  border: 2px solid #0D0D0D;
+}
+.discuss-label {
+  font-size: 10px; color: #666;
+  margin-left: 10px; font-weight: 600;
+}
+
+/* Paper pile animation */
+.paper-pile {
+  display: none;
+  position: absolute;
+  bottom: 12px; left: 4px;
+  font-size: 10px;
+  animation: paperIn .5s ease;
+}
+.paper-pile.show { display: block; }
+@keyframes paperIn {
+  from { opacity: 0; transform: translateY(-10px) rotate(-5deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+.labubu.busy { animation: labubuTypeFast .4s ease-in-out infinite; }
+@keyframes labubuTypeFast {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-1px) rotate(-1deg); }
+  75% { transform: translateY(-1px) rotate(1deg); }
+}
+
+/* Agent detail panel */
+.agent-detail-panel {
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  animation: fadeSlideIn .3s ease;
+}
+.adp-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #222;
+}
+.adp-avatar {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.adp-name { font-size: 14px; font-weight: 700; }
+.adp-role { font-size: 11px; color: #666; }
+.adp-close {
+  margin-left: auto;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #222;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.adp-close:hover { color: #fff; background: #333; }
+.adp-log-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 12px;
+  color: #ccc;
+  line-height: 1.4;
+}
+.adp-log-time {
+  color: #555;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 40px;
+}
+.adp-log-msg { flex: 1; }
+
+/* === ANIMATIONS === */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes redFlash {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: inset 0 0 60px rgba(239,68,68,.15); }
+}
+.flash-red { animation: redFlash 1s ease 2; }
+
+.page-content { display: none; animation: fadeSlideIn .3s ease; }
+.page-content.active { display: block; }
+
+/* === SCROLLBAR GLOBAL === */
+::-webkit-scrollbar { width: 0; }
+
+/* === HIDDEN === */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ======= DEMO TABS (outside phone) ======= -->
+<div class="demo-tabs">
+  <div class="demo-tab active" onclick="switchDemo(1)">Demo 1: Onboarding</div>
+  <div class="demo-tab" onclick="switchDemo(2)">Demo 2: Interface</div>
+  <div class="demo-tab" onclick="switchDemo(3)">Demo 3: Strategy</div>
+  <div class="demo-tab" onclick="switchDemo(4)">Demo 4: Bad Day</div>
+</div>
+
+<!-- ======= DEVICE FRAME ======= -->
+<div class="device" id="device">
+  <div class="phone-status">
+    <span>9:41</span>
+    <div class="notch"></div>
+    <span>&#9889; 87%</span>
+  </div>
+
+  <!-- ======= WELCOME SCREEN (Demo 1 — full page onboarding, NO balance) ======= -->
+  <div class="welcome-screen" id="welcome-screen">
+    <!-- Page 1: Intro -->
+    <div id="onboard-page-1">
+      <div class="welcome-hero" style="padding-top:30px;">
+        <div class="robot">&#129302;</div>
+        <h1>Meet AI PAL</h1>
+        <p style="margin-top:4px;">Your personal AI fund team — 5 agents working 24/7</p>
+      </div>
+      <div style="padding: 0 24px;">
+        <!-- Feature highlights -->
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;background:#1A1A1A;border:1px solid #333;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:24px;margin-bottom:6px;">&#129302;</div>
+            <div style="font-size:12px;font-weight:700;">5 AI Agents</div>
+            <div style="font-size:10px;color:#666;margin-top:2px;">Analyze, plan, protect, trade, track</div>
+          </div>
+          <div style="flex:1;background:#1A1A1A;border:1px solid #333;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:24px;margin-bottom:6px;">&#128274;</div>
+            <div style="font-size:12px;font-weight:700;">Sub-Account</div>
+            <div style="font-size:10px;color:#666;margin-top:2px;">Isolated funds, you stay in control</div>
+          </div>
+          <div style="flex:1;background:#1A1A1A;border:1px solid #333;border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:24px;margin-bottom:6px;">&#127760;</div>
+            <div style="font-size:12px;font-weight:700;">24/7</div>
+            <div style="font-size:10px;color:#666;margin-top:2px;">Works while you sleep</div>
+          </div>
+        </div>
+        <div style="padding:12px 0;">
+          <button class="btn-primary" onclick="showOnboardPage2()">Learn More &#8594;</button>
+        </div>
+      </div>
+    </div>
+    <!-- Page 2: How it works + T&C -->
+    <div id="onboard-page-2" style="display:none;">
+      <div style="padding:24px 24px 0;text-align:center;">
+        <div style="font-size:22px;font-weight:800;margin-bottom:4px;">How AI PAL Works</div>
+        <div style="font-size:13px;color:#666;">Three simple steps</div>
+      </div>
+      <div style="padding:16px 24px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#CDFF00;color:#000;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div><div style="font-size:14px;font-weight:700;">Tell AI PAL your strategy</div><div style="font-size:12px;color:#666;margin-top:2px;">Describe your thesis in plain language or pick from marketplace</div></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#CDFF00;color:#000;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div><div style="font-size:14px;font-weight:700;">Set guardrails & fund</div><div style="font-size:12px;color:#666;margin-top:2px;">Define limits AI cannot override, then add funds to your sub-account</div></div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#CDFF00;color:#000;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div><div style="font-size:14px;font-weight:700;">Watch your team work</div><div style="font-size:12px;color:#666;margin-top:2px;">See every decision, reasoning, and result in real time</div></div>
+        </div>
+        <!-- Key guarantees -->
+        <div class="card" style="margin-top:8px;">
+          <div class="check-item"><div class="check-icon">&#10003;</div><span>AI PAL cannot withdraw your funds</span></div>
+          <div class="check-item"><div class="check-icon">&#10003;</div><span>Kill switch — turn off anytime with one tap</span></div>
+          <div class="check-item"><div class="check-icon">&#10003;</div><span>All trades visible with full reasoning</span></div>
+        </div>
+        <!-- T&C checkbox -->
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:14px 0;" id="tc-row">
+          <div style="width:22px;height:22px;border-radius:6px;border:2px solid #333;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;" id="tc-checkbox" onclick="toggleTC()"></div>
+          <div style="font-size:12px;color:#999;line-height:1.5;">I agree to the <span style="color:#CDFF00;text-decoration:underline;cursor:pointer;">AI PAL Terms of Service</span> and <span style="color:#CDFF00;text-decoration:underline;cursor:pointer;">Risk Disclosure</span></div>
+        </div>
+        <button class="btn-primary" id="get-started-btn" style="opacity:.4;pointer-events:none;" onclick="enterSharedLayout()">Get Started</button>
+        <div style="height:24px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= SHARED PERSISTENT LAYOUT (used by all demos after welcome) ======= -->
+  <div id="shared-layout" class="hidden" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+
+    <!-- TOP: Compact balance header -->
+    <div class="top-section" id="top-section">
+      <div class="top-row">
+        <div class="top-left">
+          <div class="ai-status"><div class="dot" id="status-dot"></div> <span id="status-text">AI PAL Active</span></div>
+          <div class="balance" id="balance-amount">$50,000.00</div>
+          <div class="balance-change" id="balance-change">+$1,150.00 (+2.30%) this week</div>
+        </div>
+        <button class="plus-btn" onclick="toggleExplore()">+</button>
+      </div>
+    </div>
+
+    <!-- MIDDLE: Dynamic content area -->
+    <div class="middle-section" id="middle-content">
+      <!-- Content injected by JS based on active demo/tab -->
+    </div>
+
+    <!-- EXPLORE MENU OVERLAY (inside shared-layout) -->
+    <div class="explore-overlay" id="explore-overlay">
+      <div class="explore-backdrop" onclick="toggleExplore()"></div>
+      <div class="explore-sheet">
+        <div class="explore-sheet-title">Quick Actions</div>
+        <div class="explore-grid">
+          <div class="explore-item" onclick="exploreNav('transfer')">
+            <div class="ei-icon" style="background:rgba(205,255,0,.1);">&#128180;</div>
+            <div class="ei-label">Transfer</div>
+          </div>
+          <div class="explore-item" onclick="exploreNav('agents')">
+            <div class="ei-icon" style="background:rgba(6,182,212,.1);">&#129302;</div>
+            <div class="ei-label">Agents</div>
+          </div>
+          <div class="explore-item" onclick="exploreNav('strategy')">
+            <div class="ei-icon" style="background:rgba(139,92,246,.1);">&#128221;</div>
+            <div class="ei-label">Strategy</div>
+          </div>
+          <div class="explore-item" onclick="exploreNav('charts')">
+            <div class="ei-icon" style="background:rgba(74,222,128,.1);">&#128202;</div>
+            <div class="ei-label">Charts</div>
+          </div>
+          <div class="explore-item" onclick="exploreNav('history')">
+            <div class="ei-icon" style="background:rgba(251,191,36,.1);">&#128203;</div>
+            <div class="ei-label">History</div>
+          </div>
+          <div class="explore-item" onclick="exploreNav('guide')">
+            <div class="ei-icon" style="background:rgba(255,255,255,.06);">&#127891;</div>
+            <div class="ei-label">Guide</div>
+          </div>
+          <div class="explore-item" onclick="exploreNav('settings')">
+            <div class="ei-icon" style="background:rgba(255,255,255,.06);">&#9881;&#65039;</div>
+            <div class="ei-label">Settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM: Fixed chat input -->
+    <div class="bottom-bar">
+      <div class="chat-input-wrap">
+        <input type="text" placeholder="Ask AI PAL anything..." id="chat-input" onkeydown="if(event.key==='Enter')handleChat()">
+        <button class="chat-btn mic-btn">&#127908;</button>
+        <button class="chat-btn send-btn" onclick="handleChat()">&#8593;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:20px;font-size:12px;color:#555;">
+  OKX AI PAL — Hackathon Prototype &middot; March 2026
+</div>
+
+<!-- ======= ALL MIDDLE CONTENT TEMPLATES (hidden, swapped into middle-content) ======= -->
+
+<!-- DEMO 1 SCREEN 2: Onboarding tutorial -->
+<template id="tpl-d1-tutorial">
+  <div style="margin-bottom:8px; font-size:13px; color:#666; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Getting Started</div>
+  <div class="tut-card"><div class="tut-emoji">&#128172;</div><div><h3>Chat with your AI team</h3><p>Tell AI PAL your investment thesis in plain language</p></div></div>
+  <div class="tut-card"><div class="tut-emoji">&#129302;</div><div><h3>Agents build your strategy</h3><p>5 specialized agents analyze, plan, protect, execute, and track</p></div></div>
+  <div class="tut-card"><div class="tut-emoji">&#128202;</div><div><h3>Watch them work</h3><p>See every decision and reasoning in real-time</p></div></div>
+  <div class="tut-card"><div class="tut-emoji">&#128737;&#65039;</div><div><h3>You're always in control</h3><p>Set guardrails, approve trades, or go fully autonomous</p></div></div>
+  <div style="padding:12px 0;">
+    <button class="btn-primary" onclick="switchDemo(2)">Get Started &#8594;</button>
+  </div>
+</template>
+
+<!-- DEMO 2: Guide page (pills removed — use Explore button in top bar) -->
+<template id="tpl-d2-guide">
+  <div id="d2-page-area"></div>
+</template>
+
+<!-- DEMO 2 PAGE: Guide -->
+<template id="tpl-page-guide">
+  <div class="section-title">How AI PAL Works</div>
+  <div class="section-desc">Your personal team of 5 AI agents</div>
+  <div class="card" style="border-left: 3px solid #06B6D4;">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+      <span style="font-size:24px;">&#128202;</span>
+      <div><div style="font-weight:700;">Analyst</div><div style="font-size:12px;color:#06B6D4;">Market Intelligence</div></div>
+    </div>
+    <div class="card-subtitle">Scans markets 24/7 — technicals, sentiment, on-chain data, funding rates</div>
+  </div>
+  <div class="card" style="border-left: 3px solid #8B5CF6;">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+      <span style="font-size:24px;">&#129504;</span>
+      <div><div style="font-weight:700;">Strategist</div><div style="font-size:12px;color:#8B5CF6;">Decision Engine</div></div>
+    </div>
+    <div class="card-subtitle">Builds and adapts trading plans based on your goals and market conditions</div>
+  </div>
+  <div class="card" style="border-left: 3px solid #10B981;">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+      <span style="font-size:24px;">&#128737;&#65039;</span>
+      <div><div style="font-weight:700;">Sentinel</div><div style="font-size:12px;color:#10B981;">Risk Guardian</div></div>
+    </div>
+    <div class="card-subtitle">Enforces your guardrails, monitors risk, protects during market crashes</div>
+  </div>
+  <div class="card" style="border-left: 3px solid #F59E0B;">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+      <span style="font-size:24px;">&#9889;</span>
+      <div><div style="font-weight:700;">Executor</div><div style="font-size:12px;color:#F59E0B;">Trade Execution</div></div>
+    </div>
+    <div class="card-subtitle">Executes trades with optimal timing, slippage control, and order management</div>
+  </div>
+  <div class="card" style="border-left: 3px solid #A855F7;">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+      <span style="font-size:24px;">&#128200;</span>
+      <div><div style="font-weight:700;">Tracker</div><div style="font-size:12px;color:#A855F7;">Performance Analytics</div></div>
+    </div>
+    <div class="card-subtitle">Tracks portfolio performance, generates insights, and suggests improvements</div>
+  </div>
+  <div style="padding:12px 0;">
+    <button class="btn-primary" onclick="switchD2Tab(1)">Start Building &#8594;</button>
+  </div>
+</template>
+
+<!-- DEMO 2 PAGE: Strategy -->
+<template id="tpl-page-strategy">
+  <div class="card" style="text-align:center;padding:32px 16px;">
+    <div style="font-size:40px;margin-bottom:12px;">&#128221;</div>
+    <div class="section-title" style="margin-bottom:8px;">Build a Strategy</div>
+    <div style="font-size:13px;color:#999;line-height:1.5;margin-bottom:16px;">Type <span style="color:#CDFF00;font-weight:600;">"build a strategy"</span> in the chat below to start the strategy wizard, or switch to <span style="color:#CDFF00;font-weight:600;">Demo 3</span> for the full flow.</div>
+    <button class="btn-secondary" onclick="switchDemo(3)">Go to Strategy Builder</button>
+  </div>
+</template>
+
+<!-- DEMO 2 PAGE: Agents (Animated Office) -->
+<template id="tpl-page-agents">
+  <div class="office-scene" id="agent-office">
+    <div class="office-title-bar">
+      <h3>Agent Office</h3>
+      <div class="office-status-pill"><div class="os-dot"></div> All Working</div>
+    </div>
+    <!-- 5 Labubu agents at cubicles -->
+    <div class="cubicle-row" id="cubicle-row">
+      <div class="cubicle agent-c-analyst" onclick="showAgentDetail('analyst')">
+        <div class="labubu" id="lab-analyst">
+          <div class="labubu-hat">OKX</div>
+          <div class="labubu-ear-l"></div><div class="labubu-ear-r"></div>
+          <div class="labubu-head">
+            <div class="labubu-eyes"><div class="labubu-eye"></div><div class="labubu-eye"></div></div>
+            <div class="labubu-mouth"></div>
+          </div>
+          <div class="labubu-body">&#128202;</div>
+        </div>
+        <div class="labubu-desk"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+        <div class="role-tag">Analyst</div>
+      </div>
+      <div class="cubicle agent-c-strategist" onclick="showAgentDetail('strategist')">
+        <div class="labubu" id="lab-strategist">
+          <div class="labubu-hat">OKX</div>
+          <div class="labubu-ear-l"></div><div class="labubu-ear-r"></div>
+          <div class="labubu-head">
+            <div class="labubu-eyes"><div class="labubu-eye"></div><div class="labubu-eye"></div></div>
+            <div class="labubu-mouth"></div>
+          </div>
+          <div class="labubu-body">&#129504;</div>
+        </div>
+        <div class="labubu-desk"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+        <div class="role-tag">Strategist</div>
+      </div>
+      <div class="cubicle agent-c-sentinel" onclick="showAgentDetail('sentinel')">
+        <div class="labubu" id="lab-sentinel">
+          <div class="labubu-hat">OKX</div>
+          <div class="labubu-ear-l"></div><div class="labubu-ear-r"></div>
+          <div class="labubu-head">
+            <div class="labubu-eyes"><div class="labubu-eye"></div><div class="labubu-eye"></div></div>
+            <div class="labubu-mouth"></div>
+          </div>
+          <div class="labubu-body">&#128737;</div>
+        </div>
+        <div class="labubu-desk"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+        <div class="role-tag">Sentinel</div>
+      </div>
+      <div class="cubicle agent-c-executor" onclick="showAgentDetail('executor')">
+        <div class="labubu" id="lab-executor">
+          <div class="labubu-hat">OKX</div>
+          <div class="labubu-ear-l"></div><div class="labubu-ear-r"></div>
+          <div class="labubu-head">
+            <div class="labubu-eyes"><div class="labubu-eye"></div><div class="labubu-eye"></div></div>
+            <div class="labubu-mouth"></div>
+          </div>
+          <div class="labubu-body">&#9889;</div>
+        </div>
+        <div class="labubu-desk"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+        <div class="role-tag">Executor</div>
+      </div>
+      <div class="cubicle agent-c-tracker" onclick="showAgentDetail('tracker')">
+        <div class="labubu" id="lab-tracker">
+          <div class="labubu-hat">OKX</div>
+          <div class="labubu-ear-l"></div><div class="labubu-ear-r"></div>
+          <div class="labubu-head">
+            <div class="labubu-eyes"><div class="labubu-eye"></div><div class="labubu-eye"></div></div>
+            <div class="labubu-mouth"></div>
+          </div>
+          <div class="labubu-body">&#128200;</div>
+        </div>
+        <div class="labubu-desk"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+        <div class="role-tag">Tracker</div>
+      </div>
+    </div>
+    <!-- Discussion bubble (appears periodically) -->
+    <div class="discuss-bubble-wrap show" id="discuss-bubble">
+      <div class="discuss-bubble">
+        <div class="discuss-participants">
+          <div class="discuss-avatar" style="background:#06B6D4;">A</div>
+          <div class="discuss-avatar" style="background:#8B5CF6;">S</div>
+          <div class="discuss-label">Analyst &amp; Strategist discussing...</div>
+        </div>
+        <div id="discuss-text">"BTC RSI approaching 60 — should we increase DCA frequency?" — "Let's hold. Funding rates still positive, no urgency."</div>
+      </div>
+    </div>
+  </div>
+  <!-- Agent detail panel (shown on click) -->
+  <div id="agent-detail-area"></div>
+  <!-- Action buttons -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="top-btn" style="flex:1;font-size:12px;padding:10px;" onclick="triggerAgentDiscussion()">&#128172; Trigger Discussion</button>
+    <button class="top-btn" style="flex:1;font-size:12px;padding:10px;" onclick="triggerNewStrategy()">&#128196; New Strategy</button>
+  </div>
+  <div style="font-size:11px;color:#555;text-align:center;">Tap any agent to see their activity log</div>
+</template>
+
+<!-- DEMO 2 PAGE: Charts -->
+<template id="tpl-page-charts">
+  <div class="sub-tabs" id="chart-tabs">
+    <div class="sub-tab active" onclick="switchChartTab(0)">Portfolio</div>
+    <div class="sub-tab" onclick="switchChartTab(1)">Market</div>
+    <div class="sub-tab" onclick="switchChartTab(2)">P&amp;L</div>
+  </div>
+  <div id="chart-area"></div>
+</template>
+
+<template id="tpl-chart-portfolio">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;">
+    <div>
+      <span style="font-size:24px;font-weight:700;">$51,150</span>
+      <span style="font-size:14px;color:#4ADE80;margin-left:8px;">+2.3%</span>
+    </div>
+    <div style="font-size:12px;color:#666;">from $50,000</div>
+  </div>
+  <div class="fake-chart">
+    <svg viewBox="0 0 380 140" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#CDFF00" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#CDFF00" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,120 C30,115 60,118 90,105 C120,92 150,98 180,80 C210,62 240,70 270,55 C300,40 330,45 360,30 L380,25 L380,140 L0,140 Z" fill="url(#chartGrad)"/>
+      <path d="M0,120 C30,115 60,118 90,105 C120,92 150,98 180,80 C210,62 240,70 270,55 C300,40 330,45 360,30 L380,25" fill="none" stroke="#CDFF00" stroke-width="2.5"/>
+      <circle cx="380" cy="25" r="4" fill="#CDFF00">
+        <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+  <div class="time-pills">
+    <div class="time-pill">1D</div>
+    <div class="time-pill active">1W</div>
+    <div class="time-pill">1M</div>
+    <div class="time-pill">3M</div>
+    <div class="time-pill">ALL</div>
+  </div>
+</template>
+
+<template id="tpl-chart-market">
+  <div class="market-card">
+    <div>
+      <div class="coin-name">BTC</div>
+      <div class="coin-pair">Bitcoin / USDT</div>
+      <div class="coin-detail">Funding: +0.015% | RSI: 58</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <svg class="mini-spark" viewBox="0 0 60 24"><path d="M0,18 L8,14 L16,16 L24,10 L32,12 L40,6 L48,8 L60,4" fill="none" stroke="#4ADE80" stroke-width="1.5"/></svg>
+      <div>
+        <div class="coin-price">$87,200</div>
+        <div class="coin-change up">+1.2%</div>
+      </div>
+    </div>
+  </div>
+  <div class="market-card">
+    <div>
+      <div class="coin-name">ETH</div>
+      <div class="coin-pair">Ethereum / USDT</div>
+      <div class="coin-detail">Funding: +0.008% | RSI: 44</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <svg class="mini-spark" viewBox="0 0 60 24"><path d="M0,8 L8,10 L16,6 L24,12 L32,14 L40,16 L48,14 L60,18" fill="none" stroke="#F87171" stroke-width="1.5"/></svg>
+      <div>
+        <div class="coin-price">$3,420</div>
+        <div class="coin-change down">-0.8%</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-chart-pnl">
+  <div style="font-size:13px;color:#666;margin-bottom:12px;">Strategy Performance</div>
+  <div class="pnl-row"><span class="pnl-name">BTC DCA</span><span class="pnl-value">+$580 (+2.9%)</span></div>
+  <div class="pnl-row"><span class="pnl-name">ETH Spot</span><span class="pnl-value">+$210 (+2.1%)</span></div>
+  <div class="pnl-row"><span class="pnl-name">Earn Yield</span><span class="pnl-value">+$62 (+0.5%)</span></div>
+  <div class="pnl-row"><span class="pnl-name">Funding Arb</span><span class="pnl-value">+$298 (+4.0%)</span></div>
+  <div style="display:flex;justify-content:space-between;padding:16px 0;border-top:1px solid #333;margin-top:8px;">
+    <span style="font-weight:700;">Total</span>
+    <span style="font-weight:700;color:#CDFF00;">+$1,150 (+2.3%)</span>
+  </div>
+</template>
+
+<!-- DEMO 2 PAGE: History -->
+<template id="tpl-page-history">
+  <div class="section-title" style="margin-bottom:12px;">Trade History</div>
+  <div class="trade-item" id="trade-btc">
+    <div class="trade-header" onclick="toggleTrade('trade-btc')">
+      <div>
+        <div class="trade-title">Buy 0.012 BTC @ $87,200</div>
+        <div class="trade-meta">Mar 27, 3:14am</div>
+      </div>
+      <div class="trade-status">Filled &#10003;</div>
+    </div>
+    <div class="trade-detail" id="trade-btc-detail">
+      <p>&#128202; Analyst detected RSI oversold on 4H timeframe.<br>&#129504; Strategist recommended accumulation at support level.<br>&#128737;&#65039; Sentinel approved: within daily limit ($86 of $200 used).</p>
+    </div>
+  </div>
+  <div class="trade-item" id="trade-eth">
+    <div class="trade-header" onclick="toggleTrade('trade-eth')">
+      <div>
+        <div class="trade-title">Sell 0.5 ETH @ $3,420</div>
+        <div class="trade-meta">Mar 26, 11:02pm</div>
+      </div>
+      <div class="trade-status">Filled &#10003;</div>
+    </div>
+    <div class="trade-detail" id="trade-eth-detail">
+      <p>&#128202; Analyst identified resistance at $3,450.<br>&#129504; Strategist: take partial profit, ETH overweight by 3%.<br>&#9889; Executor: filled at $3,420 — 0.02% slippage.</p>
+    </div>
+  </div>
+  <div class="trade-item" id="trade-earn">
+    <div class="trade-header" onclick="toggleTrade('trade-earn')">
+      <div>
+        <div class="trade-title">Earn deposit: 5,000 USDT</div>
+        <div class="trade-meta">Mar 26, 2:00pm</div>
+      </div>
+      <div class="trade-status">Confirmed &#10003;</div>
+    </div>
+    <div class="trade-detail" id="trade-earn-detail">
+      <p>&#129504; Strategist: allocated idle USDT to Simple Earn (6.2% APY).<br>&#128737;&#65039; Sentinel: verified product risk level — low.<br>&#128200; Tracker: projected yield $310/year at current rate.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px; text-align:center; border-color:#333;">
+    <div style="font-size:12px;color:#666;margin-bottom:6px;">Try asking in the chat below:</div>
+    <div style="font-size:13px;color:#CDFF00;font-weight:600;">"Why did you buy BTC yesterday?"</div>
+  </div>
+</template>
+
+<!-- Transfer Funds View -->
+<template id="tpl-transfer-funds">
+  <div class="section-title" style="margin-bottom:4px;">Transfer Funds</div>
+  <div class="section-desc">Move funds between your accounts</div>
+  <div class="transfer-toggle" id="transfer-toggle">
+    <button class="transfer-toggle-btn active" onclick="switchTransferDir(0)">Add Funds</button>
+    <button class="transfer-toggle-btn" onclick="switchTransferDir(1)">Transfer Out</button>
+  </div>
+  <div id="transfer-dir-area">
+    <div class="transfer-account-row">
+      <div class="transfer-account-icon" style="background:rgba(255,255,255,.06);">&#127974;</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;">Main Account</div>
+        <div style="font-size:12px;color:#666;">Available: $124,500</div>
+      </div>
+      <div style="font-size:12px;color:#999;">From</div>
+    </div>
+    <div class="transfer-arrow">&#8595;</div>
+    <div class="transfer-account-row" style="border-color:#CDFF00;">
+      <div class="transfer-account-icon" style="background:rgba(205,255,0,.1);">&#129302;</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;">AI PAL Sub-Account</div>
+        <div style="font-size:12px;color:#CDFF00;">Current: $50,000</div>
+      </div>
+      <div style="font-size:12px;color:#999;">To</div>
+    </div>
+  </div>
+  <input type="text" class="transfer-amount-input" placeholder="$0.00" value="$5,000" id="transfer-amount">
+  <div class="transfer-quick-amounts">
+    <button class="transfer-quick-btn" onclick="setTransferAmount(1000)">$1K</button>
+    <button class="transfer-quick-btn" onclick="setTransferAmount(5000)">$5K</button>
+    <button class="transfer-quick-btn" onclick="setTransferAmount(10000)">$10K</button>
+    <button class="transfer-quick-btn" onclick="setTransferAmount(0)">MAX</button>
+  </div>
+  <button class="btn-primary" onclick="confirmTransfer()">Confirm Transfer</button>
+  <div style="font-size:11px;color:#555;text-align:center;margin-top:10px;">Instant · No fees · Sub-account isolation maintained</div>
+</template>
+
+<!-- Settings View -->
+<template id="tpl-page-settings">
+  <div class="section-title" style="margin-bottom:16px;">Settings</div>
+  <div class="card">
+    <div class="config-row"><span class="config-label">AI Model</span><span class="config-value">Claude Sonnet 4</span></div>
+    <div class="config-row"><span class="config-label">Mode</span><span class="config-value" style="color:#CDFF00;">PAL (Human in loop)</span></div>
+    <div class="config-row"><span class="config-label">Max per trade</span><span class="config-value">$100</span></div>
+    <div class="config-row"><span class="config-label">Daily limit</span><span class="config-value">$200</span></div>
+    <div class="config-row"><span class="config-label">Stop loss</span><span class="config-value">$200 / 40%</span></div>
+    <div class="config-row"><span class="config-label">Assets</span><span class="config-value">BTC only</span></div>
+    <div class="config-row"><span class="config-label">Futures/leverage</span><span class="config-value" style="color:#F87171;">Off</span></div>
+  </div>
+  <div style="height:12px;"></div>
+  <div class="card">
+    <div class="config-row"><span class="config-label">Notifications</span><span class="config-value" style="color:#4ADE80;">On</span></div>
+    <div class="config-row"><span class="config-label">Morning Summary</span><span class="config-value" style="color:#4ADE80;">7:00 AM</span></div>
+    <div class="config-row"><span class="config-label">Emergency Alerts</span><span class="config-value" style="color:#4ADE80;">Always</span></div>
+  </div>
+  <div style="height:12px;"></div>
+  <button class="btn-danger" style="background:#333;color:#F87171;" onclick="alert('Kill switch activated — all trading paused.')">&#128721; Emergency Kill Switch</button>
+</template>
+
+<!-- DEMO 3: Strategy Builder (6 steps) -->
+<template id="tpl-d3-strategy">
+  <div id="d3-steps-area"></div>
+</template>
+
+<template id="tpl-d3-step1">
+  <div class="progress-bar-wrap"><div class="progress-seg done"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div></div>
+  <div class="step-label">Step 1 of 6</div>
+  <div class="section-title">Fund Subaccount</div>
+  <div class="amount-display">
+    <div class="amount" id="fund-amount">$500</div>
+    <div class="label">Funding wallet &middot; $3,240 available</div>
+  </div>
+  <input type="range" class="amount-slider" id="fund-slider" min="100" max="3240" value="500" step="50" oninput="updateFundSlider(this)">
+  <div class="balance-summary">
+    <div class="bal-item"><div class="bal-label">PAL balance</div><div class="bal-val" style="color:#CDFF00;" id="bal-pal">$500</div></div>
+    <div class="bal-item"><div class="bal-label">Main</div><div class="bal-val" id="bal-main">$2,740</div></div>
+    <div class="bal-item"><div class="bal-label">Tokens</div><div class="bal-val">2,400</div></div>
+  </div>
+  <button class="btn-primary" onclick="goD3Step(2)">Confirm and continue</button>
+</template>
+
+<template id="tpl-d3-step2">
+  <div class="progress-bar-wrap"><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div></div>
+  <div class="step-label">Step 2 of 6</div>
+  <div class="section-title">Choose AI Model</div>
+  <div class="section-desc">Select the model that powers your agents</div>
+  <div class="strategy-card selected" onclick="selectCard(this)">
+    <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div>
+        <span class="tag recommended">Recommended</span>
+        <div style="font-size:16px;font-weight:700;margin-top:4px;">Claude Sonnet 4</div>
+        <div style="font-size:13px;color:#666;margin-top:2px;">Anthropic &middot; Most capable</div>
+      </div>
+      <div style="font-size:28px;">&#129504;</div>
+    </div>
+  </div>
+  <div class="strategy-card" onclick="selectCard(this)">
+    <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div>
+        <div style="font-size:16px;font-weight:700;">Qwen 2.5</div>
+        <div style="font-size:13px;color:#666;margin-top:2px;">Alibaba &middot; Balanced</div>
+      </div>
+      <div style="font-size:28px;">&#9878;&#65039;</div>
+    </div>
+  </div>
+  <div class="strategy-card" onclick="selectCard(this)">
+    <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div>
+        <div style="font-size:16px;font-weight:700;">Kimi k1.5</div>
+        <div style="font-size:13px;color:#666;margin-top:2px;">Moonshot &middot; Budget</div>
+      </div>
+      <div style="font-size:28px;">&#128176;</div>
+    </div>
+  </div>
+  <div style="padding:16px 0;"><button class="btn-primary" onclick="goD3Step(3)">Confirm model</button></div>
+</template>
+
+<template id="tpl-d3-step3">
+  <div class="progress-bar-wrap"><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div></div>
+  <div class="step-label">Step 3 of 6</div>
+  <div class="section-title">Set Strategy</div>
+  <div class="sub-tabs" id="strat-source-tabs">
+    <div class="sub-tab active" onclick="switchStratSource(0)">Marketplace</div>
+    <div class="sub-tab" onclick="switchStratSource(1)">Write own</div>
+  </div>
+  <div id="strat-src-0">
+    <div class="strategy-card selected" onclick="selectCard(this)">
+      <div style="font-size:15px;font-weight:700;">CryptoWhale <span style="color:#FBB524;">&#9733;4.8</span></div>
+      <div style="display:flex;gap:6px;margin:6px 0;"><span class="tag risk-low">DCA &middot; Low Risk</span></div>
+      <div style="font-size:13px;color:#999;">Weekly BTC/ETH accumulation with rebalancing</div>
+    </div>
+    <div class="strategy-card" onclick="selectCard(this)">
+      <div style="font-size:15px;font-weight:700;">MomentumKing <span style="color:#FBB524;">&#9733;4.5</span></div>
+      <div style="display:flex;gap:6px;margin:6px 0;"><span class="tag risk-mid">Momentum &middot; Mid Risk</span></div>
+      <div style="font-size:13px;color:#999;">EMA crossover trend following</div>
+    </div>
+    <div class="strategy-card" onclick="selectCard(this)">
+      <div style="font-size:15px;font-weight:700;">AlphaBot <span style="color:#FBB524;">&#9733;4.2</span></div>
+      <div style="display:flex;gap:6px;margin:6px 0;"><span class="tag risk-high">Grid &middot; High Risk</span></div>
+      <div style="font-size:13px;color:#999;">Dynamic grid trading on BTC/USDT</div>
+    </div>
+  </div>
+  <div id="strat-src-1" style="display:none;">
+    <textarea class="strat-textarea" placeholder="Describe your strategy in plain language. e.g., 'Buy BTC when RSI drops below 30 on the 4H chart, sell half when it hits 70. Keep 30% in stablecoins earning yield.'"></textarea>
+  </div>
+  <div style="padding:16px 0;"><button class="btn-primary" onclick="goD3Step(4)">Use this strategy</button></div>
+</template>
+
+<template id="tpl-d3-step4">
+  <div class="progress-bar-wrap"><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg"></div><div class="progress-seg"></div></div>
+  <div class="step-label">Step 4 of 6</div>
+  <div class="section-title">Set Guardrails</div>
+  <div class="section-desc">Hard limits AI cannot override</div>
+  <div class="card">
+    <div class="config-row"><span class="config-label">Max per trade</span><span class="config-value">$100</span></div>
+    <div class="config-row"><span class="config-label">Daily limit</span><span class="config-value">$200</span></div>
+    <div class="config-row"><span class="config-label">Stop loss</span><span class="config-value">$200 / 40%</span></div>
+    <div class="config-row"><span class="config-label">Assets</span><span class="config-value">BTC only</span></div>
+    <div class="config-row"><span class="config-label">Futures/leverage</span><span class="config-value" style="color:#F87171;">Off</span></div>
+  </div>
+  <div style="font-size:12px;color:#666;text-align:center;padding:8px 0;">AI PAL cannot act outside these limits.</div>
+  <div style="padding:8px 0;"><button class="btn-primary" onclick="goD3Step(5)">Confirm guardrails</button></div>
+</template>
+
+<template id="tpl-d3-step5">
+  <div class="progress-bar-wrap"><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg"></div></div>
+  <div class="step-label">Step 5 of 6</div>
+  <div class="section-title">Choose Mode</div>
+  <div class="mode-card selected" onclick="selectMode(this)">
+    <div class="mode-icon">&#129309;</div>
+    <div class="mode-tag">Human in the loop</div>
+    <div class="mode-name">PAL Mode</div>
+    <div class="mode-desc">AI PAL suggests trades, you approve each one</div>
+  </div>
+  <div class="mode-card" onclick="selectMode(this)">
+    <div class="mode-icon">&#128640;</div>
+    <div class="mode-tag">Fully autonomous</div>
+    <div class="mode-name">PAM Mode</div>
+    <div class="mode-desc">AI PAL executes within guardrails automatically</div>
+  </div>
+  <div style="font-size:12px;color:#666;text-align:center;padding:4px 0;">Switch anytime. Guardrails apply in both.</div>
+  <div style="padding:12px 0;"><button class="btn-primary" onclick="launchStrategy()">Launch AI PAL</button></div>
+</template>
+
+<template id="tpl-d3-step6">
+  <div class="progress-bar-wrap"><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div></div>
+  <div class="celebration">
+    <div class="big-emoji">&#127881;</div>
+    <h2>Your AI PAL team is live!</h2>
+    <p>CryptoWhale strategy running with $500.<br>Your agents are starting to work.</p>
+  </div>
+  <button class="btn-primary" onclick="switchDemo(2); setTimeout(function(){switchD2Tab(2)},100);">View Agent Workspace &#8594;</button>
+  <div style="height:12px;"></div>
+  <button class="btn-secondary" onclick="goD3Step(1)">Start Over</button>
+</template>
+
+<!-- DEMO 4: Bad Day -->
+<template id="tpl-d4-badday">
+  <div id="d4-content-area"></div>
+</template>
+
+<template id="tpl-d4-before">
+  <div class="card">
+    <div class="card-title">Current Strategy: Bullish BTC DCA</div>
+    <div class="alloc-row"><div class="alloc-pct">40%</div><div class="alloc-name">BTC ($20,000)<div class="alloc-note">Spot position</div></div></div>
+    <div class="alloc-row"><div class="alloc-pct">20%</div><div class="alloc-name">ETH ($10,000)<div class="alloc-note">Spot position</div></div></div>
+    <div class="alloc-row"><div class="alloc-pct">25%</div><div class="alloc-name">USDT Earn ($12,500)<div class="alloc-note">6.2% APY</div></div></div>
+    <div class="alloc-row"><div class="alloc-pct">15%</div><div class="alloc-name">Funding Arb ($7,500)<div class="alloc-note">Delta neutral</div></div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:13px;color:#666;">Sentinel Guardrail</div><div style="font-size:15px;font-weight:700;">Max drawdown -15% ($7,500)</div></div>
+      <div style="font-size:24px;">&#128994;</div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:#666;text-align:center;margin-bottom:8px;">Status: &#128994; All clear</div>
+  <div style="padding:8px 0;"><button class="btn-danger" onclick="startCrashScenario()">&#9889; Simulate Crash</button></div>
+</template>
+
+<template id="tpl-d4-timeline">
+  <!-- 3:00 AM -->
+  <div class="timeline-item red" id="t-300" style="display:none;">
+    <div class="timeline-time">3:00 AM — Crash Begins</div>
+    <div class="alert-card red-alert">
+      <div style="font-size:18px;font-weight:700;color:#F87171;margin-bottom:6px;">&#128308; BTC -12% — Flash crash detected</div>
+      <div style="font-size:14px;color:#ccc;">$87,200 &#8594; $76,736</div>
+      <div style="font-size:12px;color:#999;margin-top:4px;">Exchange inflows spiking 3x. Liquidation cascade in progress.</div>
+    </div>
+  </div>
+  <!-- 3:01 AM -->
+  <div class="timeline-item red" id="t-301" style="display:none;">
+    <div class="timeline-time">3:01 AM — Agents React</div>
+    <div class="agent-item" style="border:none;padding:8px 0;">
+      <div class="agent-icon analyst">&#128202;</div>
+      <div class="agent-body">
+        <div class="agent-name">Analyst</div>
+        <div class="agent-msg">Flash crash. Exchange inflows 3x. Liquidation cascade.</div>
+      </div>
+    </div>
+    <div class="agent-item" style="border:none;padding:8px 0;">
+      <div class="agent-icon sentinel">&#128737;&#65039;</div>
+      <div class="agent-body">
+        <div class="agent-name">Sentinel</div>
+        <div class="agent-msg" style="color:#F87171;font-weight:600;">&#128308; EMERGENCY — Drawdown -8.2%</div>
+      </div>
+    </div>
+  </div>
+  <!-- 3:02 AM Protection -->
+  <div class="timeline-item yellow" id="t-protect" style="display:none;">
+    <div class="timeline-time">3:02 AM — Protection Protocol</div>
+    <div class="alert-card yellow-alert">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;">&#128737;&#65039; Sentinel: Executing protection...</div>
+      <div class="sentinel-action"><span class="sa-check">&#10003;</span> Reducing BTC 40%&#8594;20%... &#10003;</div>
+      <div class="sentinel-action"><span class="sa-check">&#10003;</span> Pausing DCA... &#10003;</div>
+      <div class="sentinel-action"><span class="sa-check">&#10003;</span> Moving capital to stablecoin... &#10003;</div>
+    </div>
+  </div>
+  <!-- Result -->
+  <div class="timeline-item green" id="t-result" style="display:none;">
+    <div class="timeline-time">3:05 AM — Stabilized</div>
+    <div class="alert-card green-alert">
+      <div class="result-grid">
+        <div class="result-stat green"><div class="rs-value">$2,800</div><div class="rs-label">Loss Avoided</div></div>
+        <div class="result-stat amber"><div class="rs-value">-6.2%</div><div class="rs-label">Your Drawdown</div></div>
+      </div>
+      <div style="font-size:13px;color:#999;text-align:center;margin:4px 0;">Guardrail limit: -15% | Without Sentinel: -12%</div>
+      <div class="compare-bars">
+        <div class="compare-bar">
+          <div class="compare-label">You</div>
+          <div class="compare-track"><div class="compare-fill you" style="width:0%;" id="bar-you">-6.2%</div></div>
+        </div>
+        <div class="compare-bar">
+          <div class="compare-label">Market</div>
+          <div class="compare-track"><div class="compare-fill market" style="width:0%;" id="bar-market">-12%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Strategist -->
+  <div class="timeline-item green" id="t-strategist" style="display:none;">
+    <div class="timeline-time">3:10 AM — Analysis</div>
+    <div class="agent-item" style="border:none;padding:8px 0;">
+      <div class="agent-icon strategist">&#129504;</div>
+      <div class="agent-body">
+        <div class="agent-name">Strategist</div>
+        <div class="agent-msg">Whale wallets NOT selling. Leverage flush. Hold reduced position.</div>
+      </div>
+    </div>
+  </div>
+  <!-- Morning summary -->
+  <div class="timeline-item green" id="t-morning" style="display:none;">
+    <div class="timeline-time">7:00 AM — Morning Summary</div>
+    <div class="notif-mock">
+      <div class="notif-icon">&#129302;</div>
+      <div>
+        <div class="notif-app">OKX AI PAL</div>
+        <div class="notif-title">Your portfolio was protected overnight</div>
+        <div class="notif-body">Loss avoided: $2,800. Sentinel reduced exposure during BTC flash crash. Tap to review.</div>
+      </div>
+    </div>
+  </div>
+  <!-- Reset -->
+  <div class="timeline-item green" id="t-reset" style="display:none;">
+    <div style="padding:8px 0;">
+      <button class="btn-secondary" onclick="resetCrashScenario()">Reset Scenario</button>
+    </div>
+  </div>
+</template>
+
+<!-- SUBSCRIPTION PAYWALL -->
+<template id="tpl-subscription-paywall">
+  <div style="padding:8px 0 0;">
+    <div style="text-align:center;padding:16px 0 12px;">
+      <div style="font-size:36px;margin-bottom:8px;">&#128273;</div>
+      <div style="font-size:22px;font-weight:800;">Unlock AI PAL</div>
+      <div style="font-size:13px;color:#999;margin-top:4px;">Subscribe to start AI-managed trading</div>
+    </div>
+
+    <!-- Pro Plan (highlighted) -->
+    <div class="sub-plan-card selected" onclick="selectSubPlan(this)" style="background:#1A1A1A;border:2px solid #CDFF00;border-radius:16px;padding:20px;margin-bottom:10px;cursor:pointer;position:relative;transition:all .2s;">
+      <div style="position:absolute;top:-10px;right:16px;background:#CDFF00;color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;">RECOMMENDED</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:16px;font-weight:700;">AI PAL Pro</div>
+          <div style="font-size:12px;color:#999;margin-top:2px;">5 agents &middot; 3 strategies &middot; $200K limit</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:800;color:#CDFF00;">10 USDT</div>
+          <div style="font-size:11px;color:#666;">/month</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
+        <div style="font-size:10px;color:#ccc;background:#222;padding:3px 8px;border-radius:6px;">&#129302; 5 AI Agents</div>
+        <div style="font-size:10px;color:#ccc;background:#222;padding:3px 8px;border-radius:6px;">&#128203; Full Analytics</div>
+        <div style="font-size:10px;color:#ccc;background:#222;padding:3px 8px;border-radius:6px;">&#9889; Priority Execution</div>
+        <div style="font-size:10px;color:#ccc;background:#222;padding:3px 8px;border-radius:6px;">&#128274; Kill Switch</div>
+      </div>
+    </div>
+
+    <!-- Free Tier -->
+    <div class="sub-plan-card" onclick="selectSubPlan(this)" style="background:#111;border:1px solid #333;border-radius:16px;padding:16px;margin-bottom:16px;cursor:pointer;transition:all .2s;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#999;">Free Tier</div>
+          <div style="font-size:11px;color:#555;margin-top:2px;">1 strategy &middot; $1K limit &middot; Basic analytics</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:18px;font-weight:700;color:#666;">0 USDT</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment method -->
+    <div style="background:#1A1A1A;border:1px solid #333;border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px;">PAYMENT METHOD</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(205,255,0,.1);display:flex;align-items:center;justify-content:center;font-size:18px;">&#128176;</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">OKX Main Account</div>
+          <div style="font-size:11px;color:#666;">USDT Balance: 124,500.00</div>
+        </div>
+        <div style="font-size:11px;color:#4ADE80;font-weight:600;">&#10003; Connected</div>
+      </div>
+    </div>
+
+    <!-- Subscribe button -->
+    <button class="btn-primary" onclick="confirmSubscription()" style="background:#CDFF00;color:#000;">Subscribe &amp; Continue</button>
+    <div style="text-align:center;padding:10px 0 16px;">
+      <div style="font-size:10px;color:#555;">Cancel anytime &middot; Billed monthly in USDT &middot; No lock-in</div>
+    </div>
+  </div>
+</template>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let currentDemo = 1;        // 1-4
+let currentD2Tab = 0;       // 0-4
+let currentD3Step = 1;      // 1-6
+let currentChartTab = 0;    // 0-2
+let crashRunning = false;
+let hasPaid = false;        // subscription state
+let tcChecked = false;      // T&C checkbox state
+
+// ============================================================
+// ONBOARDING: Page transitions & T&C
+// ============================================================
+function showOnboardPage2() {
+  document.getElementById('onboard-page-1').style.display = 'none';
+  var p2 = document.getElementById('onboard-page-2');
+  p2.style.display = 'block';
+  p2.style.animation = 'fadeSlideIn .35s ease';
+}
+
+function toggleTC() {
+  tcChecked = !tcChecked;
+  var cb = document.getElementById('tc-checkbox');
+  var btn = document.getElementById('get-started-btn');
+  if (tcChecked) {
+    cb.innerHTML = '&#10003;';
+    cb.style.background = '#CDFF00';
+    cb.style.borderColor = '#CDFF00';
+    cb.style.color = '#000';
+    cb.style.fontWeight = '800';
+    cb.style.fontSize = '12px';
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    cb.innerHTML = '';
+    cb.style.background = 'transparent';
+    cb.style.borderColor = '#333';
+    btn.style.opacity = '.4';
+    btn.style.pointerEvents = 'none';
+  }
+}
+
+// ============================================================
+// SUBSCRIPTION PAYWALL (10 USDT)
+// ============================================================
+function showSubscriptionPaywall(afterPayCallback) {
+  // afterPayCallback is the function name to call after payment
+  window._afterPayCallback = afterPayCallback;
+  loadMiddle('tpl-subscription-paywall');
+  setTimeout(checkChatFloat, 50);
+}
+
+function selectSubPlan(el) {
+  document.querySelectorAll('.sub-plan-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function confirmSubscription() {
+  hasPaid = true;
+  // Show success animation
+  var middle = document.getElementById('middle-content');
+  middle.innerHTML = '<div class="celebration" style="padding:50px 24px;"><div class="big-emoji">&#127881;</div><h2 style="color:#CDFF00;">Welcome to AI PAL Pro!</h2><p style="margin-top:8px;">Your subscription is active.<br>Let\'s get started with funding your account.</p></div><div style="padding:0 24px 16px;"><button class="btn-primary" onclick="proceedAfterSubscription()">Continue &#8594;</button></div>';
+  middle.style.animation = 'none';
+  middle.offsetHeight;
+  middle.style.animation = 'fadeSlideIn .35s ease';
+}
+
+function proceedAfterSubscription() {
+  var cb = window._afterPayCallback;
+  if (cb === 'strategy') {
+    // Continue to the add funds step in strategy wizard, then launch
+    goD3Step(6);
+  } else if (cb === 'transfer') {
+    showTransferFunds();
+  } else {
+    showTransferFunds();
+  }
+}
+
+// Gate check: show paywall if not paid, else proceed
+function gatedAddFunds(source) {
+  if (!hasPaid) {
+    showSubscriptionPaywall(source || 'transfer');
+  } else {
+    showTransferFunds();
+  }
+}
+
+// ============================================================
+// DEMO SWITCHING
+// ============================================================
+function switchDemo(n) {
+  currentDemo = n;
+  // Update demo tab bar
+  document.querySelectorAll('.demo-tab').forEach(function(t, i) {
+    t.classList.toggle('active', i === n - 1);
+  });
+
+  if (n === 1) {
+    // Show welcome screen if not yet created, else show tutorial in shared layout
+    var ws = document.getElementById('welcome-screen');
+    if (ws.dataset.used === 'yes') {
+      // Already created account — show tutorial in shared layout (no balance)
+      showSharedLayout(true);
+      loadMiddle('tpl-d1-tutorial');
+    } else {
+      // Show the welcome screen
+      ws.classList.remove('hidden');
+      ws.style.display = 'flex';
+      var sl = document.getElementById('shared-layout');
+      sl.classList.add('hidden');
+      sl.style.display = 'none';
+    }
+  } else {
+    showSharedLayout();
+    if (n === 2) {
+      setBalance('$51,150.00', '+$1,150.00 (+2.30%) this week', false);
+      setStatus('AI PAL Active', '#CDFF00');
+      loadDemo2();
+    } else if (n === 3) {
+      setBalance('$50,000.00', '+$0.00 (0.00%) today', false);
+      setStatus('AI PAL Setup', '#CDFF00');
+      loadDemo3();
+    } else if (n === 4) {
+      setBalance('$50,000.00', '+$0.00 (0.00%) today', false);
+      setStatus('AI PAL Active', '#CDFF00');
+      crashRunning = false;
+      loadDemo4();
+    }
+  }
+}
+
+// ============================================================
+// SHARED LAYOUT HELPERS
+// ============================================================
+function showSharedLayout(hideBalance) {
+  document.getElementById('welcome-screen').classList.add('hidden');
+  document.getElementById('welcome-screen').style.display = 'none';
+  var sl = document.getElementById('shared-layout');
+  sl.classList.remove('hidden');
+  sl.style.display = 'flex';
+  // Show/hide balance header
+  var top = document.getElementById('top-section');
+  if (hideBalance) {
+    top.style.display = 'none';
+  } else {
+    top.style.display = '';
+  }
+}
+
+function enterSharedLayout() {
+  document.getElementById('welcome-screen').dataset.used = 'yes';
+  showSharedLayout(true); // hide balance for onboarding
+  loadMiddle('tpl-d1-tutorial');
+}
+
+function setBalance(amount, change, isNeg) {
+  document.getElementById('balance-amount').textContent = amount;
+  var ce = document.getElementById('balance-change');
+  ce.textContent = change;
+  ce.className = 'balance-change' + (isNeg ? ' neg' : '');
+}
+
+function setStatus(text, dotColor) {
+  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-dot').style.background = dotColor;
+}
+
+function loadMiddle(templateId) {
+  var tpl = document.getElementById(templateId);
+  var middle = document.getElementById('middle-content');
+  middle.innerHTML = tpl.innerHTML;
+  middle.scrollTop = 0;
+  // trigger animation
+  middle.style.animation = 'none';
+  middle.offsetHeight;
+  middle.style.animation = 'fadeSlideIn .3s ease';
+  setTimeout(checkChatFloat, 50);
+}
+
+function loadMiddleHTML(html) {
+  var middle = document.getElementById('middle-content');
+  middle.innerHTML = html;
+  middle.scrollTop = 0;
+  middle.style.animation = 'none';
+  middle.offsetHeight;
+  middle.style.animation = 'fadeSlideIn .3s ease';
+  setTimeout(checkChatFloat, 50);
+}
+
+// ============================================================
+// FLOATING CHAT BAR LOGIC
+// ============================================================
+function checkChatFloat() {
+  var middle = document.getElementById('middle-content');
+  var bar = document.querySelector('#shared-layout .bottom-bar');
+  if (!middle || !bar) return;
+  // If content overflows the middle section, make chat float over content
+  var overflows = middle.scrollHeight > middle.clientHeight + 20;
+  if (overflows) {
+    bar.classList.add('floating');
+    middle.style.paddingBottom = '76px'; // space for floating bar
+  } else {
+    bar.classList.remove('floating');
+    middle.style.paddingBottom = '16px';
+  }
+}
+
+// Also check on scroll inside middle section
+(function() {
+  var checkAttached = false;
+  var observer = new MutationObserver(function() {
+    var middle = document.getElementById('middle-content');
+    if (middle && !checkAttached) {
+      middle.addEventListener('scroll', function() {
+        checkChatFloat();
+      });
+      checkAttached = true;
+    }
+    setTimeout(checkChatFloat, 100);
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+
+// ============================================================
+// EXPLORE MENU
+// ============================================================
+function toggleExplore() {
+  var overlay = document.getElementById('explore-overlay');
+  overlay.classList.toggle('open');
+}
+
+function exploreNav(page) {
+  toggleExplore(); // close menu
+  if (page === 'transfer') {
+    gatedAddFunds('transfer');
+    return;
+  }
+  if (page === 'settings') {
+    loadMiddle('tpl-page-settings');
+    checkChatFloat();
+    return;
+  }
+  var pageMap = { guide: 0, strategy: 1, agents: 2, charts: 3, history: 4 };
+  var n = pageMap[page];
+  if (n === undefined) return;
+  // For all other pages, switch to Demo 2 context
+  currentDemo = 2;
+  document.querySelectorAll('.demo-tab').forEach(function(t, i) { t.classList.toggle('active', i === 1); });
+  setBalance('$51,150.00', '+$1,150.00 (+2.30%) this week', false);
+  setStatus('AI PAL Active', '#CDFF00');
+  switchD2Tab(n);
+}
+
+// ============================================================
+// TRANSFER FUNDS
+// ============================================================
+function showTransferFunds() {
+  loadMiddle('tpl-transfer-funds');
+  setTimeout(checkChatFloat, 50);
+}
+
+function switchTransferDir(n) {
+  var tabs = document.querySelectorAll('#transfer-toggle .transfer-toggle-btn');
+  tabs.forEach(function(t, i) { t.classList.toggle('active', i === n); });
+  var area = document.getElementById('transfer-dir-area');
+  if (n === 0) {
+    // Add Funds: Main → AI PAL
+    area.innerHTML = '<div class="transfer-account-row"><div class="transfer-account-icon" style="background:rgba(255,255,255,.06);">&#127974;</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">Main Account</div><div style="font-size:12px;color:#666;">Available: $124,500</div></div><div style="font-size:12px;color:#999;">From</div></div><div class="transfer-arrow">&#8595;</div><div class="transfer-account-row" style="border-color:#CDFF00;"><div class="transfer-account-icon" style="background:rgba(205,255,0,.1);">&#129302;</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">AI PAL Sub-Account</div><div style="font-size:12px;color:#CDFF00;">Current: $50,000</div></div><div style="font-size:12px;color:#999;">To</div></div>';
+  } else {
+    // Transfer Out: AI PAL → Main
+    area.innerHTML = '<div class="transfer-account-row" style="border-color:#CDFF00;"><div class="transfer-account-icon" style="background:rgba(205,255,0,.1);">&#129302;</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">AI PAL Sub-Account</div><div style="font-size:12px;color:#CDFF00;">Available: $50,000</div></div><div style="font-size:12px;color:#999;">From</div></div><div class="transfer-arrow">&#8595;</div><div class="transfer-account-row"><div class="transfer-account-icon" style="background:rgba(255,255,255,.06);">&#127974;</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">Main Account</div><div style="font-size:12px;color:#666;">Balance: $124,500</div></div><div style="font-size:12px;color:#999;">To</div></div>';
+  }
+}
+
+function setTransferAmount(val) {
+  var input = document.getElementById('transfer-amount');
+  if (val === 0) input.value = '$124,500';
+  else input.value = '$' + val.toLocaleString();
+}
+
+function confirmTransfer() {
+  // Show success briefly then return
+  var middle = document.getElementById('middle-content');
+  middle.innerHTML = '<div class="celebration" style="padding:60px 0;"><div class="big-emoji">&#10003;</div><h2 style="color:#4ADE80;">Transfer Complete</h2><p>Funds moved successfully.<br>Your AI PAL team continues working.</p></div><div style="padding:0 0 16px;"><button class="btn-primary" onclick="switchDemo(2)">Back to Dashboard</button></div>';
+}
+
+// ============================================================
+// DEMO 2: MAIN INTERFACE
+// ============================================================
+function loadDemo2() {
+  // Load the wrapper (no pill tabs, just page area)
+  loadMiddle('tpl-d2-guide');
+  // Now load the current tab's page
+  renderD2Page(currentD2Tab);
+}
+
+function switchD2Tab(n) {
+  currentDemo = 2; // ensure we're in demo 2 context
+  currentD2Tab = n;
+  // Ensure the d2 wrapper is loaded
+  if (!document.getElementById('d2-page-area')) {
+    loadMiddle('tpl-d2-guide');
+  }
+  renderD2Page(n);
+}
+
+function renderD2Page(n) {
+  var area = document.getElementById('d2-page-area');
+  if (!area) return;
+  var templates = ['tpl-page-guide', 'tpl-page-strategy', 'tpl-page-agents', 'tpl-page-charts', 'tpl-page-history'];
+  var tpl = document.getElementById(templates[n]);
+  area.innerHTML = tpl.innerHTML;
+  area.style.animation = 'none';
+  area.offsetHeight;
+  area.style.animation = 'fadeSlideIn .3s ease';
+
+  // Charts need sub-content loaded
+  if (n === 3) {
+    renderChartTab(currentChartTab);
+  }
+}
+
+// ============================================================
+// DEMO 2: CHART SUB-TABS
+// ============================================================
+function switchChartTab(n) {
+  currentChartTab = n;
+  var tabs = document.querySelectorAll('#chart-tabs .sub-tab');
+  tabs.forEach(function(t, i) { t.classList.toggle('active', i === n); });
+  renderChartTab(n);
+}
+
+function renderChartTab(n) {
+  var area = document.getElementById('chart-area');
+  if (!area) return;
+  var templates = ['tpl-chart-portfolio', 'tpl-chart-market', 'tpl-chart-pnl'];
+  var tpl = document.getElementById(templates[n]);
+  area.innerHTML = tpl.innerHTML;
+}
+
+// ============================================================
+// DEMO 3: STRATEGY BUILDER
+// ============================================================
+function loadDemo3() {
+  loadMiddle('tpl-d3-strategy');
+  goD3Step(currentD3Step);
+}
+
+function launchStrategy() {
+  if (!hasPaid) {
+    showSubscriptionPaywall('strategy');
+  } else {
+    goD3Step(6);
+  }
+}
+
+function goD3Step(n) {
+  currentD3Step = n;
+  var area = document.getElementById('d3-steps-area');
+  if (!area) {
+    // We might not be in demo 3 layout; load it
+    loadMiddle('tpl-d3-strategy');
+    area = document.getElementById('d3-steps-area');
+  }
+  var tpl = document.getElementById('tpl-d3-step' + n);
+  area.innerHTML = tpl.innerHTML;
+  area.style.animation = 'none';
+  area.offsetHeight;
+  area.style.animation = 'fadeSlideIn .35s ease';
+
+  // Update balance for step 6 celebration
+  if (n === 6) {
+    // auto-transition after 3s
+    setTimeout(function() {
+      // don't auto-switch if user already left
+    }, 3000);
+  }
+
+  // Handle slider setup for step 1
+  if (n === 1) {
+    setTimeout(function() {
+      var slider = document.getElementById('fund-slider');
+      if (slider) {
+        updateFundSlider(slider);
+      }
+    }, 50);
+  }
+}
+
+function updateFundSlider(el) {
+  var val = Number(el.value);
+  var pct = ((val - 100) / 3140 * 100);
+  el.style.background = 'linear-gradient(to right, #CDFF00 ' + pct + '%, #333 ' + pct + '%)';
+  var fa = document.getElementById('fund-amount');
+  if (fa) fa.textContent = '$' + val.toLocaleString();
+  var bp = document.getElementById('bal-pal');
+  if (bp) bp.textContent = '$' + val.toLocaleString();
+  var bm = document.getElementById('bal-main');
+  if (bm) bm.textContent = '$' + (3240 - val).toLocaleString();
+}
+
+function switchStratSource(n) {
+  var tabs = document.querySelectorAll('#strat-source-tabs .sub-tab');
+  tabs.forEach(function(t, i) { t.classList.toggle('active', i === n); });
+  var src0 = document.getElementById('strat-src-0');
+  var src1 = document.getElementById('strat-src-1');
+  if (src0) src0.style.display = n === 0 ? 'block' : 'none';
+  if (src1) src1.style.display = n === 1 ? 'block' : 'none';
+}
+
+// ============================================================
+// DEMO 4: BAD DAY
+// ============================================================
+function loadDemo4() {
+  loadMiddle('tpl-d4-badday');
+  var area = document.getElementById('d4-content-area');
+  var tpl = document.getElementById('tpl-d4-before');
+  area.innerHTML = tpl.innerHTML;
+}
+
+function startCrashScenario() {
+  crashRunning = true;
+  var area = document.getElementById('d4-content-area');
+  var tpl = document.getElementById('tpl-d4-timeline');
+  area.innerHTML = tpl.innerHTML;
+
+  // Reset all timeline items
+  area.querySelectorAll('.timeline-item').forEach(function(el) { el.style.display = 'none'; });
+
+  var steps = [
+    { id: 't-300', delay: 500, balance: '$48,000.00', change: '-$2,000 (-4.00%)', neg: true, status: null, dot: '#F87171', flash: true },
+    { id: 't-301', delay: 2000, balance: '$45,880.00', change: '-$4,120 (-8.24%)', neg: true, status: '&#128308; ALERT', dot: '#F87171' },
+    { id: 't-protect', delay: 4000, balance: '$47,200.00', change: '-$2,800 (-5.60%)', neg: true, status: '&#128993; Protecting', dot: '#FBB524' },
+    { id: 't-result', delay: 6000, balance: '$46,900.00', change: '-$3,100 (-6.20%)', neg: true, animateBars: true },
+    { id: 't-strategist', delay: 8000 },
+    { id: 't-morning', delay: 10000, status: '&#128994; Stabilized', dot: '#4ADE80' },
+    { id: 't-reset', delay: 11500 }
+  ];
+
+  steps.forEach(function(step) {
+    setTimeout(function() {
+      if (!crashRunning) return;
+      var el = document.getElementById(step.id);
+      if (el) {
+        el.style.display = 'block';
+        el.style.animation = 'none';
+        el.offsetHeight;
+        el.style.animation = 'fadeSlideIn .5s ease';
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+      if (step.balance) document.getElementById('balance-amount').textContent = step.balance;
+      if (step.change) {
+        var ce = document.getElementById('balance-change');
+        ce.textContent = step.change;
+        ce.className = 'balance-change' + (step.neg ? ' neg' : '');
+      }
+      if (step.status) document.getElementById('status-text').innerHTML = step.status;
+      if (step.dot) document.getElementById('status-dot').style.background = step.dot;
+      if (step.flash) document.getElementById('device').classList.add('flash-red');
+      if (step.animateBars) {
+        setTimeout(function() {
+          var by = document.getElementById('bar-you');
+          var bm = document.getElementById('bar-market');
+          if (by) by.style.width = '52%';
+          if (bm) bm.style.width = '100%';
+        }, 300);
+      }
+    }, step.delay);
+  });
+
+  // Remove flash after 3s
+  setTimeout(function() {
+    document.getElementById('device').classList.remove('flash-red');
+  }, 3000);
+}
+
+function resetCrashScenario() {
+  crashRunning = false;
+  setBalance('$50,000.00', '+$0.00 (0.00%) today', false);
+  setStatus('AI PAL Active', '#CDFF00');
+  loadDemo4();
+}
+
+// ============================================================
+// CARD / MODE SELECTION
+// ============================================================
+function selectCard(el) {
+  el.parentElement.querySelectorAll('.strategy-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+function selectMode(el) {
+  el.parentElement.querySelectorAll('.mode-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+// ============================================================
+// TRADE EXPAND
+// ============================================================
+function toggleTrade(id) {
+  var detail = document.getElementById(id + '-detail');
+  if (detail) detail.classList.toggle('open');
+}
+
+// ============================================================
+// CHAT HANDLER (works across all demos)
+// ============================================================
+function handleChat() {
+  var input = document.getElementById('chat-input');
+  var val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+
+  // Show sent bubble briefly
+  var middle = document.getElementById('middle-content');
+  var bubble = document.createElement('div');
+  bubble.className = 'sent-bubble';
+  bubble.textContent = val;
+  middle.appendChild(bubble);
+  middle.scrollTop = middle.scrollHeight;
+
+  var lower = val.toLowerCase();
+
+  setTimeout(function() {
+    // Route based on content
+    if (lower.includes('agent') || lower.includes('how are')) {
+      switchDemo(2);
+      setTimeout(function() { switchD2Tab(2); }, 50);
+    } else if (lower.includes('why') || lower.includes('history') || lower.includes('trade')) {
+      switchDemo(2);
+      setTimeout(function() { switchD2Tab(4); }, 50);
+    } else if (lower.includes('chart') || lower.includes('performance') || lower.includes('portfolio')) {
+      switchDemo(2);
+      setTimeout(function() { switchD2Tab(3); }, 50);
+    } else if (lower.includes('strategy') || lower.includes('build')) {
+      switchDemo(2);
+      setTimeout(function() { switchD2Tab(1); }, 50);
+    } else if (lower.includes('guide') || lower.includes('help') || lower.includes('how to')) {
+      switchDemo(2);
+      setTimeout(function() { switchD2Tab(0); }, 50);
+    } else {
+      // Default: show agents
+      switchDemo(2);
+      setTimeout(function() { switchD2Tab(2); }, 50);
+    }
+  }, 600);
+}
+
+// ============================================================
+// AGENT OFFICE INTERACTIONS
+// ============================================================
+var agentData = {
+  analyst: {
+    name: 'Analyst', emoji: '&#128202;', color: '#06B6D4', role: 'Market Intelligence',
+    log: [
+      { time: '2s ago', msg: 'Scanning BTC markets... RSI 58, 4H uptrend intact' },
+      { time: '30s ago', msg: 'ETH funding rate +0.015% — neutral signal' },
+      { time: '2m ago', msg: 'Whale alert: 500 BTC moved to exchange. Monitoring.' },
+      { time: '5m ago', msg: 'On-chain: Active addresses up 12% WoW — bullish' },
+      { time: '15m ago', msg: 'Macro scan complete. No FOMC until next week.' },
+      { time: '1h ago', msg: 'BTC dominance at 54.2%, ETH/BTC ratio declining.' }
+    ]
+  },
+  strategist: {
+    name: 'Strategist', emoji: '&#129504;', color: '#8B5CF6', role: 'Decision Engine',
+    log: [
+      { time: '30s ago', msg: 'Hold current allocation. No action needed.' },
+      { time: '3m ago', msg: 'Reviewed DCA schedule — next buy in 4 hours' },
+      { time: '10m ago', msg: 'Rebalancing analysis: portfolio within 2% target' },
+      { time: '30m ago', msg: 'ETH slightly overweight. Will trim if +5% more.' },
+      { time: '1h ago', msg: 'Strategy performance: +2.3% vs benchmark +1.1%' },
+      { time: '3h ago', msg: 'Adjusted Earn allocation: moved 2K to higher APY pool' }
+    ]
+  },
+  sentinel: {
+    name: 'Sentinel', emoji: '&#128737;', color: '#10B981', role: 'Risk Guardian',
+    log: [
+      { time: '1m ago', msg: 'All positions within limits. Risk score: 3/10 &#128994;' },
+      { time: '5m ago', msg: 'Checked liquidation levels — safe margin >40%' },
+      { time: '15m ago', msg: 'Guardrail check: daily spend $86 of $200 limit' },
+      { time: '30m ago', msg: 'Exchange health: all APIs responsive, <50ms latency' },
+      { time: '1h ago', msg: 'Volatility monitor: 30-day vol at 42% — normal range' },
+      { time: '2h ago', msg: 'Emergency protocol: ready. Kill switch: armed.' }
+    ]
+  },
+  executor: {
+    name: 'Executor', emoji: '&#9889;', color: '#F59E0B', role: 'Trade Execution',
+    log: [
+      { time: '2m ago', msg: 'No pending trades. Standing by.' },
+      { time: '20m ago', msg: 'Filled: Buy 0.012 BTC @ $87,200 — slippage 0.02%' },
+      { time: '1h ago', msg: 'Order placed: limit buy 0.012 BTC @ $87,200' },
+      { time: '3h ago', msg: 'Earn deposit: 5,000 USDT → Simple Earn (6.2% APY)' },
+      { time: '6h ago', msg: 'Sold 0.5 ETH @ $3,420 — partial profit taking' },
+      { time: '12h ago', msg: 'Optimized order routing: saved $12 in fees' }
+    ]
+  },
+  tracker: {
+    name: 'Tracker', emoji: '&#128200;', color: '#A855F7', role: 'Performance Analytics',
+    log: [
+      { time: '5m ago', msg: '+2.3% this week vs BTC +1.1%. Sharpe: 1.4' },
+      { time: '30m ago', msg: 'Best performer: Funding Arb +4.0% this week' },
+      { time: '1h ago', msg: 'Portfolio Sharpe ratio improved from 1.2 to 1.4' },
+      { time: '4h ago', msg: 'Daily P&L report generated. Sent to morning summary.' },
+      { time: '12h ago', msg: 'Win rate this month: 68% (17/25 trades profitable)' },
+      { time: '1d ago', msg: 'Weekly benchmark: outperforming BTC-hold by 1.2%' }
+    ]
+  }
+};
+
+var discussions = [
+  { agents: ['analyst', 'strategist'], labels: 'Analyst & Strategist discussing...', text: '"BTC RSI approaching 60 — should we increase DCA frequency?" — "Let\'s hold. Funding rates still positive, no urgency."' },
+  { agents: ['sentinel', 'executor'], labels: 'Sentinel & Executor coordinating...', text: '"The 0.012 BTC order is within all guardrails. Approved." — "Executing now. Target: limit fill under $87,250."' },
+  { agents: ['strategist', 'tracker'], labels: 'Strategist & Tracker reviewing...', text: '"Sharpe ratio up to 1.4 — the Earn allocation is working." — "Agreed. Let\'s keep 25% in stablecoins earning yield."' },
+  { agents: ['analyst', 'sentinel'], labels: 'Analyst & Sentinel alert...', text: '"Unusual whale movement detected — 500 BTC to Binance." — "Noted. Raising alert level to 4/10. No action yet."' },
+  { agents: ['strategist', 'executor', 'sentinel'], labels: 'Strategy meeting...', text: '"Proposing to trim ETH by 2% and add to BTC DCA." — "Risk check passed." — "Will execute at next favorable price."' }
+];
+
+var discussionIdx = 0;
+
+function showAgentDetail(agentKey) {
+  var agent = agentData[agentKey];
+  var area = document.getElementById('agent-detail-area');
+  if (!area) return;
+  var logHtml = agent.log.map(function(l) {
+    return '<div class="adp-log-item"><div class="adp-log-time">' + l.time + '</div><div class="adp-log-msg">' + l.msg + '</div></div>';
+  }).join('');
+  area.innerHTML = '<div class="agent-detail-panel"><div class="adp-header"><div class="adp-avatar" style="background:' + agent.color + '22;">' + agent.emoji + '</div><div><div class="adp-name">' + agent.name + '</div><div class="adp-role">' + agent.role + '</div></div><button class="adp-close" onclick="closeAgentDetail()">&#10005;</button></div>' + logHtml + '</div>';
+  area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeAgentDetail() {
+  var area = document.getElementById('agent-detail-area');
+  if (area) area.innerHTML = '';
+}
+
+function triggerAgentDiscussion() {
+  var bubble = document.getElementById('discuss-bubble');
+  if (!bubble) return;
+  discussionIdx = (discussionIdx + 1) % discussions.length;
+  var d = discussions[discussionIdx];
+  var avatarColors = { analyst: '#06B6D4', strategist: '#8B5CF6', sentinel: '#10B981', executor: '#F59E0B', tracker: '#A855F7' };
+  var avatarHtml = d.agents.map(function(a) {
+    return '<div class="discuss-avatar" style="background:' + avatarColors[a] + ';">' + a[0].toUpperCase() + '</div>';
+  }).join('');
+  bubble.innerHTML = '<div class="discuss-bubble"><div class="discuss-participants">' + avatarHtml + '<div class="discuss-label">' + d.labels + '</div></div><div>' + d.text + '</div></div>';
+  bubble.classList.remove('show');
+  void bubble.offsetHeight;
+  bubble.classList.add('show');
+}
+
+function triggerNewStrategy() {
+  // Make all labubus go into "busy" mode
+  var labubus = document.querySelectorAll('.labubu');
+  labubus.forEach(function(l) { l.classList.add('busy'); });
+
+  // Show paper pile on desks
+  var desks = document.querySelectorAll('.labubu-desk');
+  desks.forEach(function(d) {
+    var pp = document.createElement('div');
+    pp.className = 'paper-pile show';
+    pp.textContent = '&#128196;&#128196;&#128196;';
+    pp.innerHTML = '📄📄📄';
+    d.appendChild(pp);
+  });
+
+  // Update discussion bubble
+  var bubble = document.getElementById('discuss-bubble');
+  if (bubble) {
+    bubble.innerHTML = '<div class="discuss-bubble" style="border-color:rgba(205,255,0,.3);background:rgba(205,255,0,.04);"><div class="discuss-participants"><div class="discuss-avatar" style="background:#CDFF00;color:#000;">!</div><div class="discuss-label" style="color:#CDFF00;">New Strategy Received!</div></div><div>All agents analyzing new instructions... Building execution plan. Estimated time: 30 seconds.</div></div>';
+    bubble.classList.remove('show');
+    void bubble.offsetHeight;
+    bubble.classList.add('show');
+  }
+
+  // Update office status
+  var statusPill = document.querySelector('.office-status-pill');
+  if (statusPill) {
+    statusPill.innerHTML = '<div class="os-dot" style="background:#CDFF00;"></div> Strategy Update';
+    statusPill.style.color = '#CDFF00';
+    statusPill.style.background = 'rgba(205,255,0,.08)';
+  }
+
+  // Reset after 5 seconds
+  setTimeout(function() {
+    labubus.forEach(function(l) { l.classList.remove('busy'); });
+    document.querySelectorAll('.paper-pile').forEach(function(p) { p.remove(); });
+    if (statusPill) {
+      statusPill.innerHTML = '<div class="os-dot"></div> All Working';
+      statusPill.style.color = '#4ADE80';
+      statusPill.style.background = 'rgba(74,222,128,.08)';
+    }
+    if (bubble) {
+      bubble.innerHTML = '<div class="discuss-bubble"><div class="discuss-participants"><div class="discuss-avatar" style="background:#4ADE80;">&#10003;</div><div class="discuss-label" style="color:#4ADE80;">Strategy Updated!</div></div><div>New strategy deployed. All agents recalibrated and working on updated allocation targets.</div></div>';
+    }
+  }, 5000);
+}
+
+// Auto-cycle discussions every 8 seconds
+setInterval(function() {
+  if (document.getElementById('agent-office')) {
+    triggerAgentDiscussion();
+  }
+}, 8000);
+
+// ============================================================
+// BALANCE ANIMATION (for Demo 4 countdown)
+// ============================================================
+function animateBalance(from, to, duration) {
+  var el = document.getElementById('balance-amount');
+  var start = performance.now();
+  function tick(now) {
+    var elapsed = now - start;
+    var progress = Math.min(elapsed / duration, 1);
+    var current = from + (to - from) * progress;
+    el.textContent = '$' + current.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
