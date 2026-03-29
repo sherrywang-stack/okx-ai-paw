@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>OKX AI PAW — Interactive PRD</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:#0D0D0F;color:#fff;height:100vh;overflow:hidden}
+
+/* ── TOP BAR ── */
+#topbar{height:56px;background:#18181C;border-bottom:1px solid #2A2A30;display:flex;align-items:center;padding:0 20px;gap:0;position:fixed;top:0;left:0;right:0;z-index:200}
+.tb-logo{font-size:15px;font-weight:800;color:#fff;margin-right:20px;white-space:nowrap}.tb-logo span{color:#CDFF00}
+.flow-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.flow-tabs::-webkit-scrollbar{display:none}
+.ftab{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.ftab:hover{background:#222228}
+.ftab.active{background:#CDFF0015;border-color:#CDFF0044;color:#fff}
+.ftab .fi{font-size:14px}
+.ftab .fl{font-size:10px;font-weight:700;color:#888}
+.ftab.active .fl{color:#CDFF00}
+.ftab .fn{font-size:11px;font-weight:700;color:#ccc}
+.ftab.active .fn{color:#fff}
+.opt-toggle{display:flex;gap:2px;margin-left:16px;background:#111;border:1px solid #2A2A30;border-radius:8px;padding:3px;flex-shrink:0}
+.ot-btn{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#666;border:none;background:transparent}
+.ot-btn.a1{background:#CDFF00;color:#000}
+.ot-btn.a2{background:#7C3AED;color:#fff}
+
+/* ── MAIN LAYOUT ── */
+#main{display:flex;height:calc(100vh - 56px);margin-top:56px}
+
+/* ── SIDEBAR ── */
+#sidebar{width:220px;flex-shrink:0;background:#18181C;border-right:1px solid #2A2A30;overflow-y:auto;padding:14px 0 80px;display:flex;flex-direction:column}
+.sl{font-size:10px;font-weight:700;color:#444;letter-spacing:1px;text-transform:uppercase;padding:6px 16px 4px}
+.si{display:flex;align-items:flex-start;gap:10px;padding:8px 16px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.si:hover{background:#222228}
+.si.active{border-left-color:#CDFF00;background:#CDFF0015}
+.si.done{border-left-color:#059669}
+.si .sn{width:20px;height:20px;border-radius:50%;background:#2A2A30;color:#666;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s}
+.si.active .sn{background:#CDFF00;color:#000}
+.si.done .sn{background:#059669;color:#fff}
+.si .st .la{font-size:11px;font-weight:600;color:#aaa;line-height:1.3}
+.si .st .su{font-size:10px;color:#444;margin-top:2px}
+.si.active .st .la{color:#fff}
+
+/* ── CENTER ── */
+#center{flex:1;display:flex;align-items:center;justify-content:center;background:#111}
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+/* ── DIAGRAM MODE ── */
+#diag-wrap{display:none;width:100%;height:100%;overflow-y:auto;padding:28px 36px;background:#0D0D10;box-sizing:border-box}
+.fc-title{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.fc-subtitle{font-size:12px;color:#666;margin-bottom:28px}
+.fc-phase{font-size:10px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;margin:20px 0 10px;padding-left:12px;border-left:3px solid #333}
+.fc-row{display:flex;align-items:flex-start;gap:16px;margin-bottom:0}
+.fc-col{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.fc-node{border-radius:10px;padding:9px 16px;font-size:11px;font-weight:600;text-align:center;min-width:220px;max-width:280px;line-height:1.4;position:relative}
+.fc-start{background:#1E1E24;border:1.5px solid #444;color:#aaa}
+.fc-proc{background:#1A2640;border:1.5px solid #2563EB55;color:#93C5FD}
+.fc-proc-green{background:#052E16;border:1.5px solid #059669;color:#6EE7B7}
+.fc-proc-red{background:#2D0A0A;border:1.5px solid #DC2626;color:#FCA5A5}
+.fc-proc-orange{background:#2D1A06;border:1.5px solid #D97706;color:#FCD34D}
+.fc-proc-purple{background:#1A0A2E;border:1.5px solid #7C3AED;color:#C4B5FD}
+.fc-decision{background:#1A1A08;border:1.5px solid #CA8A04;color:#FDE047;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;min-width:200px;text-align:center;position:relative}
+.fc-decision::before{content:"\25C7";position:absolute;left:-10px;top:50%;transform:translateY(-50%);font-size:16px;color:#CA8A04;line-height:1}
+.fc-arrow{font-size:14px;color:#444;text-align:center;line-height:1;margin:4px 0;flex-shrink:0}
+.fc-arrow-green{color:#059669}
+.fc-arrow-red{color:#DC2626}
+.fc-side-exit{background:#111318;border:1px dashed #444;border-radius:8px;padding:6px 12px;font-size:10px;color:#666;white-space:nowrap;margin-left:8px;margin-top:4px;align-self:center}
+.fc-label-yes{font-size:9px;font-weight:800;color:#059669;letter-spacing:.5px;text-align:center;margin:2px 0}
+.fc-label-no{font-size:9px;font-weight:800;color:#EF4444;letter-spacing:.5px}
+.fc-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.fc-badge-rec{background:#052E16;color:#6EE7B7;border:1px solid #059669}
+.fc-badge-norec{background:#2D1A06;color:#FCD34D;border:1px dashed #D97706}
+.fc-note-box{background:#1C1200;border:1.5px dashed #D97706;border-radius:10px;padding:8px 14px;font-size:10px;color:#FCD34D;line-height:1.5;max-width:260px;margin-left:12px;align-self:center}
+.fc-connector-h{width:24px;height:1.5px;background:#444;align-self:center;flex-shrink:0}
+.fc-loop-note{font-size:9px;color:#555;font-style:italic;text-align:center;margin-top:2px}
+.opt-label{font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px}
+.opt-label.o1{background:#CDFF0022;color:#CDFF00;border:1px solid #CDFF0044}
+.opt-label.o2{background:#7C3AED22;color:#9F7AEA;border:1px solid #7C3AED44}
+.pf{width:340px;height:680px;background:#000;border-radius:42px;border:7px solid #2A2A30;position:relative;overflow:hidden;box-shadow:0 0 0 1px #111,0 24px 48px rgba(0,0,0,0.7)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:24px;background:#000;border-radius:0 0 15px 15px;z-index:10}
+.pstat{position:absolute;top:0;left:0;right:0;height:40px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 5px;z-index:9;pointer-events:none}
+.pstat .t{font-size:12px;font-weight:700;color:#fff}
+.pstat .ic{font-size:10px;color:#fff}
+.pscr{position:absolute;top:0;left:0;right:0;bottom:0;background:#000;overflow:hidden;overflow-y:auto;transition:opacity .2s ease}
+
+/* ── NOTES PANEL ── */
+#notes{width:320px;flex-shrink:0;background:#18181C;border-right:1px solid #2A2A30;overflow-y:auto;padding:20px;padding-bottom:80px}
+#notes::-webkit-scrollbar{width:4px}
+#notes::-webkit-scrollbar-thumb{background:#2A2A30;border-radius:2px}
+.nstep{font-size:11px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px}
+.ntitle{font-size:16px;font-weight:800;color:#fff;margin-bottom:12px;line-height:1.3}
+.actor-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:#1A1A20;border-radius:8px}
+.actor-chip{font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px}
+.ac-user{background:#CDFF0022;color:#CDFF00;border:1px solid #CDFF0044}
+.ac-sys{background:#05966922;color:#34D399;border:1px solid #05966944}
+.ac-both{background:#D9770622;color:#FBBF24;border:1px solid #D9770644}
+
+.n-section{margin-bottom:14px}
+.n-sec-label{font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
+.n-body{font-size:12px;color:#aaa;line-height:1.6}
+.n-body b{color:#ddd}
+
+.diff-block{background:#111;border-radius:10px;overflow:hidden;margin-bottom:12px}
+.db-header{padding:8px 12px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.6px}
+.db-header.d1{background:#CDFF0018;color:#CDFF00}
+.db-header.d2{background:#7C3AED18;color:#9F7AEA}
+.db-body{padding:10px 12px;font-size:12px;color:#aaa;line-height:1.5;border-top:1px solid #1C1C22}
+.db-body b{color:#ddd}
+
+.key-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.key-item{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#888}
+.key-dot{width:6px;height:6px;border-radius:50%;background:#CDFF00;flex-shrink:0;margin-top:5px}
+.key-item .kt{color:#aaa;line-height:1.5}
+.key-item .kt b{color:#ddd}
+
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px}
+.tag-new{background:#CDFF0022;color:#CDFF00;border:1px solid #CDFF0033}
+.tag-diff{background:#7C3AED22;color:#9F7AEA;border:1px solid #7C3AED33}
+.tag-same{background:#1C1C22;color:#555}
+
+/* ── NAV ── */
+#navbar{position:fixed;bottom:0;left:540px;right:0;height:60px;background:#18181C;border-top:1px solid #2A2A30;display:flex;align-items:center;justify-content:center;gap:12px;z-index:100}
+.nb{padding:9px 20px;border-radius:8px;border:1px solid #2A2A30;background:#222228;color:#ccc;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.nb:hover{background:#2A2A34}
+.nb.p{background:#CDFF00;border-color:#CDFF00;color:#000}
+.nb:disabled{opacity:0.3;cursor:not-allowed}
+.sc{font-size:12px;color:#555;min-width:90px;text-align:center}
+.sc strong{color:#aaa}
+.sc .flow-indicator{font-size:10px;display:block;margin-top:2px;color:#333;font-weight:600}
+
+/* ── Phase badges (sidebar) ── */
+.pbadge{display:inline-flex;align-items:center;font-size:8px;font-weight:800;padding:1px 6px;border-radius:3px;letter-spacing:.4px;margin-top:3px;white-space:nowrap}
+.pb-p1{background:#052E16;color:#6EE7B7;border:1px solid #059669}
+.pb-p2{background:#0D1E3A;color:#93C5FD;border:1px solid #2563EB55}
+.pb-p3{background:#2D1A4E;color:#C4B5FD;border:1px solid #7C3AED55}
+.pb-future{background:#1C1200;color:#FCD34D;border:1px dashed #D97706}
+.pb-ref{background:#1A1A20;color:#555;border:1px solid #2A2A30}
+
+/* ── Labubu animation ── */
+@keyframes labubuBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="tb-logo"><span>OKX</span> AI PAW</div>
+  <div class="flow-tabs" id="flow-tabs"></div>
+  <div class="opt-toggle" id="opt-toggle" style="display:none">
+    <button class="ot-btn a1" id="ot1" onclick="setOption(1)">Option 1</button>
+    <button class="ot-btn" id="ot2" onclick="setOption(2)">Option 2</button>
+  </div>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+    <div class="sl" id="flow-label">Flow Steps</div>
+    <div id="step-list"></div>
+  </div>
+  <div id="notes">
+    <div class="nstep" id="notes-step-label"></div>
+    <div class="ntitle" id="notes-title"></div>
+    <div class="actor-row" id="notes-actor"></div>
+    <div id="notes-body"></div>
+  </div>
+  <div id="center">
+    <div class="phone-wrap" id="phone-wrap">
+      <div id="opt-label-el" style="display:none"></div>
+      <div class="pf">
+        <div class="notch"></div>
+        <div class="pstat"><div class="t">9:41</div><div class="ic">&#9679;&#9679;&#9679; &#128267;</div></div>
+        <div class="pscr" id="phone-screen"></div>
+      </div>
+    </div>
+    <div id="diag-wrap"></div>
+  </div>
+</div>
+
+<div id="navbar">
+  <button class="nb" id="btn-prev" onclick="navigate(-1)">&#8592; Prev</button>
+  <div class="sc">
+    <strong id="nav-info">1 / 1</strong>
+    <span class="flow-indicator" id="nav-flow-label"></span>
+  </div>
+  <button class="nb p" id="btn-next" onclick="navigate(1)">Next &#8594;</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  SCREEN BUILDERS — OKX AI PAW
+// ════════════════════════════════════════════════
+
+// ── dark theme helpers ──
+var BG = '#000';
+var CARD = '#1A1A1A';
+var BORDER = '#333';
+var TXT = '#fff';
+var TXT2 = '#999';
+var TXT3 = '#666';
+var ACCENT = '#CDFF00';
+var GREEN = '#4ADE80';
+var RED = '#F87171';
+var AG_ANALYST = '#06B6D4';
+var AG_STRATEGIST = '#8B5CF6';
+var AG_SENTINEL = '#10B981';
+var AG_EXECUTOR = '#F59E0B';
+var AG_TRACKER = '#A855F7';
+
+function darkBase(inner) {
+  return '<div style="width:100%;height:100%;background:' + BG + ';font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow-y:auto;padding-top:40px;color:' + TXT + ';">' + inner + '</div>';
+}
+
+function darkCard(inner) {
+  return '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:14px;margin:8px 16px;padding:14px;">' + inner + '</div>';
+}
+
+function ctaBtn(text, disabled) {
+  var bg = disabled ? '#333' : ACCENT;
+  var col = disabled ? '#666' : '#000';
+  var cur = disabled ? 'not-allowed' : 'pointer';
+  return '<div style="padding:0 16px 16px;"><button style="width:100%;padding:14px;border-radius:12px;border:none;background:' + bg + ';color:' + col + ';font-size:15px;font-weight:700;cursor:' + cur + ';">' + text + '</button></div>';
+}
+
+function progressBar(step, total) {
+  var pct = Math.round((step / total) * 100);
+  return '<div style="padding:12px 16px 0;"><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:11px;color:' + TXT2 + ';">Step ' + step + ' of ' + total + '</span><span style="font-size:11px;color:' + ACCENT + ';">' + pct + '%</span></div>'
+    + '<div style="width:100%;height:4px;background:#222;border-radius:2px;"><div style="width:' + pct + '%;height:100%;background:' + ACCENT + ';border-radius:2px;"></div></div></div>';
+}
+
+function pawNav() {
+  var S = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px';
+  return '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:#111;border-top:1px solid #222;display:flex;align-items:center;">'
+    + '<div style="' + S + '"><div style="font-size:15px;color:#555">&#127968;</div><div style="font-size:8px;color:#555">Home</div></div>'
+    + '<div style="' + S + '"><div style="font-size:15px;color:#555">&#128202;</div><div style="font-size:8px;color:#555">Markets</div></div>'
+    + '<div style="' + S + '"><div style="font-size:15px;color:#555">&#128260;</div><div style="font-size:8px;color:#555">Trade</div></div>'
+    + '<div style="' + S + '"><div style="width:22px;height:22px;background:' + ACCENT + ';border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#000">&#129302;</div><div style="font-size:8px;font-weight:700;color:' + ACCENT + ';margin-top:1px">AI PAW</div></div>'
+    + '<div style="' + S + '"><div style="font-size:15px;color:#555">&#128100;</div><div style="font-size:8px;color:#555">Profile</div></div>'
+    + '</div>';
+}
+
+function balanceHeader(balance, change, pct) {
+  return '<div style="padding:12px 16px 8px;">'
+    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><div style="width:8px;height:8px;border-radius:50%;background:' + GREEN + ';"></div><span style="font-size:11px;color:' + GREEN + ';font-weight:600;">AI PAW Active</span></div>'
+    + '<div style="font-size:28px;font-weight:800;color:#fff;">' + balance + '</div>'
+    + '<div style="font-size:13px;color:' + (change.charAt(0) === '+' ? GREEN : RED) + ';margin-top:2px;">' + change + ' (' + pct + ') this week</div>'
+    + '</div>';
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 0: SCOPE DIAGRAM
+// ═══════════════════════════════════════════
+function scScopeOverview() {
+  var h = '';
+  h += '<div class="fc-title">OKX AI PAW — Multi-Agent AI Trading</div>';
+  h += '<div class="fc-subtitle">Interactive PRD v1.0 — March 2026</div>';
+
+  // TARGET USERS
+  h += '<div class="fc-phase">TARGET USERS</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;">';
+  h += '<div class="fc-node fc-proc" style="min-width:340px;max-width:500px;text-align:left;line-height:1.6;">'
+    + '<div style="font-size:13px;font-weight:800;margin-bottom:6px;">&#127919; Primary: "The Part-Time Trader"</div>'
+    + '<b>Intermediate crypto investor, 25-45, has day job</b><br>'
+    + '&#8226; Portfolio: $5K&ndash;$50K on OKX<br>'
+    + '&#8226; Trades 3-5x/week, checks markets 5-10x/day, uses TradingView<br>'
+    + '&#8226; Knows RSI, funding rates, support/resistance. Can\'t code.<br>'
+    + '&#8226; Misses entries during sleep/work. Panics during crashes. No system.<br>'
+    + '&#8226; Willingness to pay: $20-30/month for something that works'
+    + '</div>';
+  h += '<div class="fc-node fc-proc-purple" style="min-width:300px;max-width:400px;text-align:left;line-height:1.6;">'
+    + '<div style="font-size:13px;font-weight:800;margin-bottom:6px;">&#128161; Secondary: "The Systematic Trader"</div>'
+    + '<b>Semi-professional, $20K&ndash;$200K portfolio</b><br>'
+    + '&#8226; Knows funding arb, basis trading, mean reversion<br>'
+    + '&#8226; Can\'t automate without coding<br>'
+    + '&#8226; JTBD: "Run my strategies 24/7 without maintaining Python scripts"'
+    + '</div>';
+  h += '</div>';
+
+  // JOBS TO BE DONE
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">';
+  var jtbd = [
+    '"Execute my thesis while I sleep &mdash; buy BTC dips, collect funding rate yield"',
+    '"Protect my portfolio during crashes without me being awake"',
+    '"Tell me what my AI did and WHY &mdash; I need to trust it before giving it more money"',
+    '"Show me if my AI team is actually making money vs. just holding"'
+  ];
+  for (var j = 0; j < jtbd.length; j++) {
+    h += '<div class="fc-node" style="background:#1A1A08;border:1.5px solid #CA8A04;color:#FDE047;min-width:220px;max-width:360px;text-align:left;font-size:11px;line-height:1.5;">' + jtbd[j] + '</div>';
+  }
+  h += '</div>';
+
+  // NOT FOR
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">';
+  var notfor = [
+    ['&#10060; Pure beginner', 'Needs hand-holding &rarr; Smart Trade 2.0 (free)'],
+    ['&#10060; Professional quant', 'Codes own systems &rarr; Agent TradeKit API directly'],
+    ['&#10060; User with &lt;$1K', 'Insufficient capital &rarr; OKX Trading Bots (free)']
+  ];
+  for (var j = 0; j < notfor.length; j++) {
+    h += '<div class="fc-node fc-start" style="min-width:200px;max-width:280px;text-align:left;">'
+      + '<div style="font-weight:800;margin-bottom:3px;">' + notfor[j][0] + '</div>'
+      + '<div style="font-size:10px;color:#888;">' + notfor[j][1] + '</div></div>';
+  }
+  h += '</div>';
+
+  // PAIN POINTS
+  h += '<div class="fc-phase">5 PAIN POINTS WE SOLVE</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">';
+  var pains = [
+    ['&#128564;', '"I miss trades while I sleep"', '73% of significant price moves happen outside US market hours. Users miss entries at 3am.'],
+    ['&#128557;', '"I don\'t trust AI with my money"', '#1 barrier to AI trading adoption. Binance AI Pro has zero transparency.'],
+    ['&#128561;', '"I panic-sell during crashes"', 'Emotional decisions during -10% drops cost the average trader 15-20% annually.'],
+    ['&#128565;', '"I can\'t monitor everything at once"', 'Watching 50+ funding rates, catching RSI extremes at 3am &mdash; impossible for one human.'],
+    ['&#128566;', '"I don\'t know if AI is actually helping"', 'No existing AI product tracks risk-adjusted performance with benchmark comparison.']
+  ];
+  for (var i = 0; i < pains.length; i++) {
+    h += '<div class="fc-node fc-proc-red" style="min-width:200px;max-width:240px;text-align:left;">'
+      + '<div style="font-size:16px;margin-bottom:4px;">' + pains[i][0] + '</div>'
+      + '<div style="font-weight:800;margin-bottom:3px;">' + pains[i][1] + '</div>'
+      + '<div style="font-size:10px;color:#FCA5A5;opacity:0.8;">' + pains[i][2] + '</div>'
+      + '</div>';
+  }
+  h += '</div>';
+
+  // MVP SCOPE (P0)
+  h += '<div class="fc-phase">MVP SCOPE (P0)</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">';
+  var p0 = [
+    ['&#128269;', 'Analyst Agent', AG_ANALYST, 'Scans markets, detects patterns, whale movements'],
+    ['&#128161;', 'Strategist Agent', AG_STRATEGIST, 'Generates allocation, rebalances based on thesis'],
+    ['&#128737;', 'Sentinel Agent', AG_SENTINEL, 'Enforces guardrails, crash protection, kill switch'],
+    ['&#9889;', 'Executor Agent', AG_EXECUTOR, 'Places orders, manages DCA, timing optimization'],
+    ['&#128200;', 'Tracker Agent', AG_TRACKER, 'Attribution, Sharpe ratio, performance reports']
+  ];
+  for (var i = 0; i < p0.length; i++) {
+    h += '<div style="background:' + p0[i][2] + '15;border:1.5px solid ' + p0[i][2] + ';border-radius:10px;padding:10px 14px;min-width:180px;max-width:220px;">'
+      + '<div style="font-size:18px;margin-bottom:3px;">' + p0[i][0] + '</div>'
+      + '<div style="font-size:12px;font-weight:800;color:' + p0[i][2] + ';">' + p0[i][1] + '</div>'
+      + '<div style="font-size:10px;color:#aaa;margin-top:3px;">' + p0[i][3] + '</div>'
+      + '</div>';
+  }
+  h += '</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">';
+  var p0extras = ['AI PAW sub-account creation', 'Natural language strategy input', 'Agent Activity Feed', 'Dashboard + risk gauge', 'Crash simulation demo', 'Agent pipeline orchestration', 'Pre-built + self-built strategies', 'Access to OKX CeFi + Web3 skills'];
+  for (var i = 0; i < p0extras.length; i++) {
+    h += '<div class="fc-node fc-proc-green" style="min-width:160px;max-width:220px;">' + p0extras[i] + '</div>';
+  }
+  h += '</div>';
+
+  // P1 FAST FOLLOW
+  h += '<div class="fc-phase">P1 (FAST FOLLOW)</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">';
+  var p1items = ['Strategy marketplace', 'Derivatives support', 'Advanced analytics dashboard'];
+  for (var i = 0; i < p1items.length; i++) {
+    h += '<div class="fc-node fc-proc-orange" style="min-width:160px;max-width:220px;">' + p1items[i] + '</div>';
+  }
+  h += '</div>';
+
+  // OUT OF SCOPE
+  h += '<div class="fc-phase">OUT OF SCOPE</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">';
+  var oos = ['Pure beginners (use Smart Trade)', 'Institutional / quant traders', 'DeFi integration (v2)'];
+  for (var i = 0; i < oos.length; i++) {
+    h += '<div class="fc-node fc-start" style="min-width:180px;max-width:240px;">' + oos[i] + '</div>';
+  }
+  h += '</div>';
+
+  return h;
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 1: COMPETITOR DIAGRAM
+// ═══════════════════════════════════════════
+function scCompetitors() {
+  var h = '';
+  h += '<div class="fc-title">Competitive Analysis: OKX AI PAW vs Market</div>';
+  h += '<div class="fc-subtitle">Direct competitor comparison — March 2026</div>';
+
+  var thS = 'padding:10px 12px;font-size:10px;font-weight:800;text-align:left;border-bottom:1px solid #333;';
+  var tdS = 'padding:8px 12px;font-size:10px;border-bottom:1px solid #222;line-height:1.4;';
+  var gS = 'background:#052E16;color:#6EE7B7;';
+  var rS = 'background:#2D0A0A;color:#FCA5A5;';
+  var yS = 'background:#2D1A06;color:#FCD34D;';
+  var nS = 'background:#1A1A1A;color:#aaa;';
+
+  h += '<div style="overflow-x:auto;margin-top:10px;">';
+  h += '<table style="width:100%;border-collapse:collapse;background:#111;border-radius:12px;overflow:hidden;border:1px solid #333;">';
+
+  // header
+  h += '<tr style="background:#1A1A1A;">';
+  h += '<th style="' + thS + 'color:#666;width:14%;">Feature</th>';
+  h += '<th style="' + thS + 'color:#CDFF00;width:22%;">&#129302; OKX AI PAW</th>';
+  h += '<th style="' + thS + 'color:#F0B90B;width:22%;">Binance AI Pro</th>';
+  h += '<th style="' + thS + 'color:#3B82F6;width:22%;">3Commas</th>';
+  h += '<th style="' + thS + 'color:#22D3EE;width:20%;">Cryptohopper</th>';
+  h += '</tr>';
+
+  var rows = [
+    ['Launched', ['Hackathon 2026', nS], ['Mar 25, 2026', nS], ['2017', nS], ['2017', nS]],
+    ['Price', ['Free &rarr; $19.99 &rarr; $49.99', gS], ['$9.99/mo', yS], ['$37-59/mo', rS], ['$24-108/mo', rS]],
+    ['Architecture', ['<b>5 specialized agents</b>', gS], ['Single chatbot, multi-LLM', rS], ['Rule-based bots + AI layer', yS], ['Cloud-based trading bots', yS]],
+    ['Risk Mgmt', ['<b>Sentinel agent + kill switch + emergency protocols</b>', gS], ['Sub-account only', yS], ['Stop-loss rules', rS], ['Stop-loss rules', rS]],
+    ['Transparency', ['<b>Agent Activity Feed &mdash; every decision + reasoning</b>', gS], ['Chat log', yS], ['Trade log', yS], ['Trade log', yS]],
+    ['Interaction', ['<b>Dashboard-first (80/15/5)</b>', gS], ['Chat-first', yS], ['Config-heavy dashboard', rS], ['Complex UI', rS]],
+    ['While you sleep', ['<b>Adaptive agents 24/7 + morning summary</b>', gS], ['Nothing', rS], ['Bots run (rigid rules)', yS], ['Bots run (rigid rules)', yS]],
+    ['Performance', ['<b>Full attribution, Sharpe ratio, benchmarks</b>', gS], ['None', rS], ['Basic P&amp;L', yS], ['Basic P&amp;L', yS]],
+    ['Natural language', ['<b>Yes</b>', gS], ['Yes', gS], ['No', rS], ['No', rS]],
+    ['User base', ['New', yS], ['250M+ platform', gS], ['1.2M', yS], ['1.05M', yS]]
+  ];
+
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    h += '<tr>';
+    h += '<td style="' + tdS + 'font-weight:700;color:#ccc;">' + r[0] + '</td>';
+    for (var c = 1; c < r.length; c++) {
+      h += '<td style="' + tdS + r[c][1] + '">' + r[c][0] + '</td>';
+    }
+    h += '</tr>';
+  }
+
+  h += '</table></div>';
+
+  // legend
+  h += '<div style="display:flex;gap:16px;margin-top:16px;">';
+  h += '<div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#052E16;border:1px solid #059669;"></div><span style="font-size:10px;color:#6EE7B7;">Advantage</span></div>';
+  h += '<div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#2D1A06;border:1px solid #D97706;"></div><span style="font-size:10px;color:#FCD34D;">Neutral</span></div>';
+  h += '<div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#2D0A0A;border:1px solid #DC2626;"></div><span style="font-size:10px;color:#FCA5A5;">Disadvantage</span></div>';
+  h += '</div>';
+
+  return h;
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 2: ONBOARDING
+// ═══════════════════════════════════════════
+function scOnboardWelcome() {
+  var inner = '<div style="text-align:center;padding:40px 20px 20px;">'
+    + '<div style="font-size:72px;margin-bottom:16px;">&#129302;</div>'
+    + '<div style="font-size:28px;font-weight:800;color:' + ACCENT + ';margin-bottom:8px;">Meet AI PAW</div>'
+    + '<div style="font-size:14px;color:' + TXT2 + ';line-height:1.6;margin-bottom:28px;">Your personal AI fund team &mdash; 5 agents<br>working 24/7 to grow your portfolio</div>'
+    + '</div>';
+
+  // Feature cards
+  var features = [
+    ['&#129302;', '5 AI Agents', 'Analyst, Strategist, Sentinel, Executor, Tracker', AG_ANALYST],
+    ['&#128274;', 'Sub-Account', 'Isolated funds — your main balance stays safe', AG_SENTINEL],
+    ['&#128337;', '24/7 Active', 'Never misses a trade, even while you sleep', AG_EXECUTOR]
+  ];
+  inner += '<div style="padding:0 16px;">';
+  for (var i = 0; i < features.length; i++) {
+    inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">'
+      + '<div style="width:42px;height:42px;border-radius:12px;background:' + features[i][3] + '20;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">' + features[i][0] + '</div>'
+      + '<div><div style="font-size:14px;font-weight:700;color:#fff;">' + features[i][1] + '</div>'
+      + '<div style="font-size:11px;color:' + TXT2 + ';margin-top:2px;">' + features[i][2] + '</div></div>'
+      + '</div>';
+  }
+  inner += '</div>';
+  inner += ctaBtn('Learn More &#8594;', false);
+
+  return darkBase(inner);
+}
+
+function scOnboardHowItWorks() {
+  var inner = '<div style="padding:20px 16px 10px;">'
+    + '<div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">How AI PAW Works</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:20px;">Three steps to autonomous trading</div>'
+    + '</div>';
+
+  var steps = [
+    ['1', 'Tell your strategy', 'Describe your thesis in plain English. "I\'m bullish BTC, worried about summer correction."'],
+    ['2', 'Set your guardrails', 'Define max drawdown, stop-loss triggers. Sentinel enforces these &mdash; no exceptions.'],
+    ['3', 'Watch your team work', 'Five AI agents collaborate 24/7. You get a morning summary every day.']
+  ];
+  inner += '<div style="padding:0 16px;">';
+  for (var i = 0; i < steps.length; i++) {
+    inner += '<div style="display:flex;gap:12px;margin-bottom:16px;">'
+      + '<div style="width:32px;height:32px;border-radius:50%;background:' + ACCENT + ';color:#000;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;">' + steps[i][0] + '</div>'
+      + '<div><div style="font-size:14px;font-weight:700;color:#fff;">' + steps[i][1] + '</div>'
+      + '<div style="font-size:12px;color:' + TXT2 + ';margin-top:3px;line-height:1.5;">' + steps[i][2] + '</div></div>'
+      + '</div>';
+  }
+  inner += '</div>';
+
+  // Guarantees
+  inner += '<div style="padding:0 16px 12px;">';
+  var checks = ['Your funds stay in an isolated sub-account', 'Kill switch stops all trading instantly', 'Full transparency &mdash; every agent action logged'];
+  for (var i = 0; i < checks.length; i++) {
+    inner += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">'
+      + '<div style="color:' + GREEN + ';font-size:14px;">&#10003;</div>'
+      + '<div style="font-size:12px;color:#ccc;">' + checks[i] + '</div>'
+      + '</div>';
+  }
+  inner += '</div>';
+
+  // T&C
+  inner += '<div style="padding:0 16px 8px;">'
+    + '<div style="display:flex;align-items:flex-start;gap:8px;padding:12px;background:#111;border:1px solid #222;border-radius:10px;">'
+    + '<div style="width:18px;height:18px;border-radius:4px;border:2px solid ' + BORDER + ';flex-shrink:0;margin-top:1px;"></div>'
+    + '<div style="font-size:11px;color:' + TXT2 + ';line-height:1.5;">I have read and agree to the <span style="color:' + ACCENT + ';text-decoration:underline;">AI PAW Terms & Conditions</span> and understand the risks of AI-assisted trading.</div>'
+    + '</div></div>';
+
+  inner += '<div style="padding:0 16px 16px;"><button style="width:100%;padding:14px;border-radius:12px;border:none;background:#333;color:#666;font-size:15px;font-weight:700;cursor:not-allowed;">Get Started</button></div>';
+
+  return darkBase(inner);
+}
+
+function scOnboardTutorial() {
+  var inner = '<div style="padding:20px 16px 10px;">'
+    + '<div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:16px;">Getting Started</div>'
+    + '</div>';
+
+  var cards = [
+    ['&#128172;', 'Chat with your AI team', 'Tell them your investment thesis in natural language'],
+    ['&#129302;', 'Agents build your strategy', 'They analyze markets and create an allocation plan'],
+    ['&#128064;', 'Watch them work', 'Real-time Agent Activity Feed shows every action'],
+    ['&#128274;', 'You\'re always in control', 'Kill switch, guardrails, and PAL mode for manual approval']
+  ];
+  inner += '<div style="padding:0 16px;">';
+  for (var i = 0; i < cards.length; i++) {
+    inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">'
+      + '<div style="font-size:28px;flex-shrink:0;">' + cards[i][0] + '</div>'
+      + '<div><div style="font-size:13px;font-weight:700;color:#fff;">' + cards[i][1] + '</div>'
+      + '<div style="font-size:11px;color:' + TXT2 + ';margin-top:2px;">' + cards[i][2] + '</div></div>'
+      + '</div>';
+  }
+  inner += '</div>';
+  inner += ctaBtn('Get Started &#8594;', false);
+
+  return darkBase(inner);
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 3: SUBSCRIPTION
+// ═══════════════════════════════════════════
+function scSubscriptionPaywall() {
+  var inner = '<div style="text-align:center;padding:30px 20px 16px;">'
+    + '<div style="font-size:48px;margin-bottom:12px;">&#128273;</div>'
+    + '<div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;">Unlock AI PAW</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';">Choose your plan to start autonomous trading</div>'
+    + '</div>';
+
+  // Pro card
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:linear-gradient(135deg,#1A1A1A,#222);border:2px solid ' + ACCENT + ';border-radius:16px;padding:20px;margin-bottom:12px;position:relative;">'
+    + '<div style="position:absolute;top:-10px;right:16px;background:' + ACCENT + ';color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">RECOMMENDED</div>'
+    + '<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;">AI PAW Pro</div>'
+    + '<div style="font-size:28px;font-weight:800;color:' + ACCENT + ';margin-bottom:8px;">10 <span style="font-size:14px;">USDT/month</span></div>';
+
+  var proFeatures = ['5 AI agents working 24/7', 'Sentinel crash protection', 'Morning summary reports', 'Unlimited strategy changes', 'Priority agent execution'];
+  for (var i = 0; i < proFeatures.length; i++) {
+    inner += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;"><span style="color:' + ACCENT + ';font-size:12px;">&#10003;</span><span style="font-size:12px;color:#ccc;">' + proFeatures[i] + '</span></div>';
+  }
+  inner += '</div>';
+
+  // Free tier
+  inner += '<div style="background:#111;border:1px solid #333;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">'
+    + '<div><div style="font-size:14px;font-weight:700;color:#999;">Free Tier</div>'
+    + '<div style="font-size:11px;color:#555;">View-only dashboards, no execution</div></div>'
+    + '<div style="width:18px;height:18px;border-radius:50%;border:2px solid #444;"></div>'
+    + '</div>';
+
+  // Payment method
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:12px 14px;margin-bottom:16px;">'
+    + '<div style="font-size:10px;color:' + TXT3 + ';text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Payment Method</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;">'
+    + '<div style="width:28px;height:28px;border-radius:7px;background:#222;display:flex;align-items:center;justify-content:center;font-size:14px;">&#128176;</div>'
+    + '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:#fff;">OKX Main Account</div>'
+    + '<div style="font-size:10px;color:' + TXT2 + ';">USDT balance: 1,240.50</div></div>'
+    + '<div style="font-size:14px;color:#555;">&#8250;</div>'
+    + '</div></div>';
+
+  inner += '</div>';
+  inner += ctaBtn('Subscribe & Continue', false);
+
+  return darkBase(inner);
+}
+
+function scPaymentSuccess() {
+  var inner = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;text-align:center;padding:20px;">'
+    + '<div style="font-size:72px;margin-bottom:20px;">&#127881;</div>'
+    + '<div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;">Welcome to AI PAW Pro!</div>'
+    + '<div style="font-size:14px;color:' + TXT2 + ';margin-bottom:4px;">Your subscription is active</div>'
+    + '<div style="font-size:12px;color:' + TXT3 + ';margin-bottom:30px;">10 USDT charged to your Main Account</div>'
+    + '<div style="background:#052E16;border:1px solid #059669;border-radius:12px;padding:12px 20px;margin-bottom:30px;">'
+    + '<div style="font-size:12px;color:' + GREEN + ';font-weight:600;">&#10003; Pro features unlocked</div>'
+    + '</div>'
+    + '</div>';
+  inner += ctaBtn('Continue &#8594;', false);
+
+  return darkBase(inner);
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 4: STRATEGY BUILDER
+// ═══════════════════════════════════════════
+function scStrategyDescribe() {
+  var inner = progressBar(1, 6);
+  inner += '<div style="padding:20px 16px 10px;">'
+    + '<div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">Describe Your Strategy</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:16px;">Tell your AI team what you\'re thinking</div>'
+    + '</div>';
+
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:#111;border:1.5px solid ' + BORDER + ';border-radius:12px;padding:14px;min-height:120px;margin-bottom:12px;">'
+    + '<div style="font-size:13px;color:#555;line-height:1.7;">I\'m bullish BTC long-term, worried about a summer correction. Portfolio is $50K, max 15% drawdown tolerance. Want exposure to ETH too. Prefer DCA over lump sum.</div>'
+    + '</div>';
+
+  inner += '<div style="font-size:10px;color:' + TXT3 + ';margin-bottom:16px;">&#128161; Tip: Be specific about assets, risk tolerance, and time horizon. The Analyst agent will scan related market data.</div>';
+
+  // Example tags
+  inner += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;">';
+  var tags = ['Bullish BTC', 'DCA Strategy', 'Hedge downside', 'Stablecoin yield'];
+  for (var i = 0; i < tags.length; i++) {
+    inner += '<div style="padding:5px 10px;border-radius:20px;border:1px solid ' + BORDER + ';font-size:11px;color:' + TXT2 + ';background:#111;">' + tags[i] + '</div>';
+  }
+  inner += '</div></div>';
+  inner += ctaBtn('Next &#8594;', false);
+
+  return darkBase(inner);
+}
+
+function scStrategyAllocation() {
+  var inner = progressBar(2, 6);
+  inner += '<div style="padding:20px 16px 10px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+    + '<div style="width:24px;height:24px;border-radius:6px;background:' + AG_STRATEGIST + '30;display:flex;align-items:center;justify-content:center;font-size:12px;">&#128161;</div>'
+    + '<div style="font-size:11px;font-weight:700;color:' + AG_STRATEGIST + ';">STRATEGIST\'S RECOMMENDATION</div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:16px;">Based on your thesis and current market conditions</div>'
+    + '</div>';
+
+  var allocs = [
+    ['BTC', 'Spot', '40%', '&#8364;20,000', '#F7931A', 'Core position, DCA entry over 2 weeks'],
+    ['ETH', 'Spot', '20%', '&#8364;10,000', '#627EEA', 'Growth allocation, ETH/BTC ratio favorable'],
+    ['USDT', 'Earn (6.2% APY)', '25%', '&#8364;12,500', '#26A17B', 'Dry powder + yield while waiting'],
+    ['ARB', 'Funding Arb', '15%', '&#8364;7,500', '#9945FF', 'Delta-neutral, ~12% APR estimated']
+  ];
+
+  inner += '<div style="padding:0 16px;">';
+  for (var i = 0; i < allocs.length; i++) {
+    inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:12px;margin-bottom:8px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;">'
+      + '<div style="width:28px;height:28px;border-radius:50%;background:' + allocs[i][4] + '30;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:' + allocs[i][4] + ';">' + allocs[i][0].charAt(0) + '</div>'
+      + '<div><div style="font-size:13px;font-weight:700;color:#fff;">' + allocs[i][0] + ' ' + allocs[i][1] + '</div>'
+      + '<div style="font-size:10px;color:' + TXT2 + ';">' + allocs[i][5] + '</div></div></div>'
+      + '<div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:' + ACCENT + ';">' + allocs[i][2] + '</div>'
+      + '<div style="font-size:10px;color:' + TXT3 + ';">' + allocs[i][3] + '</div></div>'
+      + '</div></div>';
+  }
+  inner += '</div>';
+
+  inner += '<div style="padding:0 16px 16px;display:flex;gap:8px;">'
+    + '<button style="flex:1;padding:14px;border-radius:12px;border:1px solid ' + BORDER + ';background:transparent;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Adjust</button>'
+    + '<button style="flex:1;padding:14px;border-radius:12px;border:none;background:' + ACCENT + ';color:#000;font-size:14px;font-weight:700;cursor:pointer;">Accept &#10003;</button>'
+    + '</div>';
+
+  return darkBase(inner);
+}
+
+function scStrategyGuardrails() {
+  var inner = progressBar(3, 6);
+  inner += '<div style="padding:20px 16px 10px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+    + '<div style="width:24px;height:24px;border-radius:6px;background:' + AG_SENTINEL + '30;display:flex;align-items:center;justify-content:center;font-size:12px;">&#128737;</div>'
+    + '<div style="font-size:11px;font-weight:700;color:' + AG_SENTINEL + ';">SENTINEL GUARDRAILS</div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:20px;">These limits cannot be overridden by other agents</div>'
+    + '</div>';
+
+  // Max drawdown slider
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:16px;margin-bottom:12px;">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:10px;">'
+    + '<div style="font-size:13px;font-weight:700;color:#fff;">Max Drawdown</div>'
+    + '<div style="font-size:16px;font-weight:800;color:' + RED + ';">-15%</div></div>'
+    + '<div style="width:100%;height:6px;background:#222;border-radius:3px;position:relative;">'
+    + '<div style="width:50%;height:100%;background:linear-gradient(90deg,' + GREEN + ',' + RED + ');border-radius:3px;"></div>'
+    + '<div style="position:absolute;top:-5px;left:50%;width:16px;height:16px;background:#fff;border-radius:50%;transform:translateX(-50%);box-shadow:0 2px 4px rgba(0,0,0,0.5);"></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:' + TXT3 + ';"><span>-5%</span><span>-25%</span></div>'
+    + '</div>';
+
+  // Stop loss toggle
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:16px;margin-bottom:12px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    + '<div style="font-size:13px;font-weight:700;color:#fff;">Per-Asset Stop Loss</div>'
+    + '<div style="width:40px;height:22px;background:' + GREEN + ';border-radius:11px;padding:2px;display:flex;align-items:center;justify-content:flex-end;">'
+    + '<div style="width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div></div></div>'
+    + '<div style="font-size:11px;color:' + TXT2 + ';">Automatically sell individual positions that drop beyond threshold</div>'
+    + '</div>';
+
+  // Kill switch
+  inner += '<div style="background:#1A0808;border:1.5px solid #DC2626;border-radius:12px;padding:16px;margin-bottom:16px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+    + '<div style="font-size:18px;">&#128680;</div>'
+    + '<div style="font-size:13px;font-weight:700;color:' + RED + ';">Emergency Kill Switch</div></div>'
+    + '<div style="font-size:11px;color:#FCA5A5;line-height:1.5;">One tap to halt ALL agent activity, cancel pending orders, and move funds to stablecoin. Available 24/7 from any screen.</div>'
+    + '</div>';
+  inner += '</div>';
+
+  inner += ctaBtn('Save Guardrails', false);
+
+  return darkBase(inner);
+}
+
+function scStrategyRisk() {
+  var inner = progressBar(4, 6);
+  inner += '<div style="padding:20px 16px 10px;">'
+    + '<div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:16px;">Risk Assessment</div>'
+    + '</div>';
+
+  // Risk score
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:20px;margin-bottom:12px;text-align:center;">'
+    + '<div style="font-size:11px;color:' + TXT2 + ';margin-bottom:4px;">RISK SCORE</div>'
+    + '<div style="font-size:42px;font-weight:800;color:' + AG_EXECUTOR + ';">6.2<span style="font-size:16px;color:' + TXT3 + ';">/10</span></div>'
+    + '<div style="font-size:12px;color:' + AG_EXECUTOR + ';font-weight:600;">MODERATE</div>'
+    + '<div style="width:100%;height:6px;background:#222;border-radius:3px;margin-top:12px;">'
+    + '<div style="width:62%;height:100%;background:' + AG_EXECUTOR + ';border-radius:3px;"></div></div>'
+    + '</div>';
+
+  var risks = [
+    'BTC allocation (40%) exposes portfolio to high-volatility asset',
+    'Funding rate arbitrage carries smart contract and exchange risk',
+    'Summer correction thesis may not materialize, resulting in underexposure',
+    'Sentinel -15% drawdown limit may trigger during normal volatility',
+    'Past AI agent performance does not guarantee future results'
+  ];
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;margin-bottom:16px;">';
+  for (var i = 0; i < risks.length; i++) {
+    inner += '<div style="display:flex;gap:8px;padding:6px 0;' + (i < risks.length - 1 ? 'border-bottom:1px solid #222;' : '') + '">'
+      + '<div style="color:' + AG_EXECUTOR + ';font-size:10px;margin-top:2px;">&#9888;</div>'
+      + '<div style="font-size:11px;color:#ccc;line-height:1.5;">' + risks[i] + '</div></div>';
+  }
+  inner += '</div></div>';
+  inner += ctaBtn('I Acknowledge the Risks', false);
+
+  return darkBase(inner);
+}
+
+function scStrategyMode() {
+  var inner = progressBar(5, 6);
+  inner += '<div style="padding:20px 16px 10px;">'
+    + '<div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">Choose Your Mode</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:20px;">How much control do you want?</div>'
+    + '</div>';
+
+  // PAL mode
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:' + CARD + ';border:2px solid ' + ACCENT + ';border-radius:14px;padding:16px;margin-bottom:10px;position:relative;">'
+    + '<div style="position:absolute;top:-8px;right:14px;background:' + ACCENT + ';color:#000;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;">SELECTED</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+    + '<div style="font-size:20px;">&#129309;</div>'
+    + '<div style="font-size:16px;font-weight:800;color:#fff;">PAL Mode</div></div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';line-height:1.5;margin-bottom:8px;">Human in the loop. Agents propose, you approve. Best for learning how the system works.</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  var palTags = ['Approve each trade', 'Push notifications', 'Full control'];
+  for (var i = 0; i < palTags.length; i++) {
+    inner += '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:' + ACCENT + '20;color:' + ACCENT + ';border:1px solid ' + ACCENT + '33;">' + palTags[i] + '</span>';
+  }
+  inner += '</div></div>';
+
+  // PAM mode
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:14px;padding:16px;margin-bottom:20px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+    + '<div style="font-size:20px;">&#129302;</div>'
+    + '<div style="font-size:16px;font-weight:800;color:#fff;">PAM Mode</div></div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';line-height:1.5;margin-bottom:8px;">Fully autonomous. Agents execute within your guardrails. You get a morning summary.</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  var pamTags = ['Auto-execute trades', 'Morning summaries', 'Sentinel protected'];
+  for (var i = 0; i < pamTags.length; i++) {
+    inner += '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#22222;color:' + TXT2 + ';border:1px solid ' + BORDER + ';">' + pamTags[i] + '</span>';
+  }
+  inner += '</div></div></div>';
+
+  inner += ctaBtn('Launch AI PAW &#128640;', false);
+
+  return darkBase(inner);
+}
+
+function scStrategyLaunch() {
+  var inner = progressBar(6, 6);
+  inner += '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 20px;">'
+    + '<div style="font-size:72px;margin-bottom:16px;">&#127881;</div>'
+    + '<div style="font-size:24px;font-weight:800;color:' + ACCENT + ';margin-bottom:8px;">Your AI PAW team is live!</div>'
+    + '<div style="font-size:14px;color:' + TXT2 + ';margin-bottom:20px;">CryptoWhale strategy running with $50,000</div>'
+    + '</div>';
+
+  // Agent status
+  inner += '<div style="padding:0 16px;">';
+  var agents = [
+    ['&#128269;', 'Analyst', AG_ANALYST, 'Scanning markets...'],
+    ['&#128161;', 'Strategist', AG_STRATEGIST, 'Allocation set'],
+    ['&#128737;', 'Sentinel', AG_SENTINEL, 'Guardrails armed'],
+    ['&#9889;', 'Executor', AG_EXECUTOR, 'Ready to trade'],
+    ['&#128200;', 'Tracker', AG_TRACKER, 'Monitoring P&L']
+  ];
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:12px;margin-bottom:16px;">';
+  for (var i = 0; i < agents.length; i++) {
+    inner += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;' + (i < agents.length - 1 ? 'border-bottom:1px solid #222;' : '') + '">'
+      + '<div style="width:32px;height:32px;border-radius:8px;background:' + agents[i][2] + '20;display:flex;align-items:center;justify-content:center;font-size:14px;">' + agents[i][0] + '</div>'
+      + '<div style="flex:1;font-size:12px;font-weight:600;color:#fff;">' + agents[i][1] + '</div>'
+      + '<div style="font-size:11px;color:' + agents[i][2] + ';">' + agents[i][3] + '</div>'
+      + '</div>';
+  }
+  inner += '</div></div>';
+
+  inner += ctaBtn('View Agent Workspace &#8594;', false);
+  inner += '<div style="text-align:center;padding-bottom:16px;"><span style="font-size:12px;color:' + TXT3 + ';cursor:pointer;">Start Over</span></div>';
+
+  return darkBase(inner);
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 5: DASHBOARD
+// ═══════════════════════════════════════════
+function scDashboardMain() {
+  var inner = '';
+  inner += balanceHeader('$51,150.00', '+$1,150.00', '+2.30%');
+
+  // + Quick action button
+  inner += '<div style="padding:0 16px 8px;display:flex;justify-content:flex-end;">'
+    + '<div style="width:36px;height:36px;border-radius:50%;background:' + ACCENT + ';display:flex;align-items:center;justify-content:center;font-size:20px;color:#000;cursor:pointer;box-shadow:0 4px 12px rgba(205,255,0,0.3);">+</div>'
+    + '</div>';
+
+  // Agent Activity Feed
+  inner += '<div style="padding:0 16px 8px;"><div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">Agent Activity Feed</div></div>';
+
+  var activities = [
+    [AG_ANALYST, '&#128269;', 'Analyst', '2m ago', 'Scanned BTC/USDT order book — detected $4.2M buy wall at $67,800'],
+    [AG_STRATEGIST, '&#128161;', 'Strategist', '8m ago', 'Adjusted ETH allocation from 20% to 18% — funding rate declining'],
+    [AG_SENTINEL, '&#128737;', 'Sentinel', '15m ago', 'All clear &#10003; — portfolio drawdown at -1.2%, well within -15% limit'],
+    [AG_EXECUTOR, '&#9889;', 'Executor', '32m ago', 'Executed DCA buy: 0.015 BTC at $67,420 — 3 of 14 scheduled buys complete'],
+    [AG_TRACKER, '&#128200;', 'Tracker', '1h ago', 'Weekly Sharpe ratio: 1.82 — above benchmark (1.5)']
+  ];
+
+  inner += '<div style="padding:0 16px;">';
+  for (var i = 0; i < activities.length; i++) {
+    inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:10px;padding:10px 12px;margin-bottom:6px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+      + '<div style="width:22px;height:22px;border-radius:6px;background:' + activities[i][0] + '25;display:flex;align-items:center;justify-content:center;font-size:11px;">' + activities[i][1] + '</div>'
+      + '<div style="font-size:11px;font-weight:700;color:' + activities[i][0] + ';">' + activities[i][2] + '</div>'
+      + '<div style="font-size:9px;color:' + TXT3 + ';margin-left:auto;">' + activities[i][3] + '</div>'
+      + '</div>'
+      + '<div style="font-size:11px;color:#ccc;line-height:1.4;padding-left:30px;">' + activities[i][4] + '</div>'
+      + '</div>';
+  }
+  inner += '</div>';
+
+  // chat bar
+  inner += '<div style="position:sticky;bottom:52px;padding:8px 16px;background:linear-gradient(transparent,#000 30%);padding-top:20px;">'
+    + '<div style="background:#111;border:1px solid ' + BORDER + ';border-radius:24px;padding:10px 14px;display:flex;align-items:center;gap:8px;">'
+    + '<div style="flex:1;font-size:12px;color:#555;">Chat with your agents...</div>'
+    + '<div style="width:28px;height:28px;border-radius:50%;background:' + ACCENT + ';display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;">&#8593;</div>'
+    + '</div></div>';
+
+  inner += pawNav();
+
+  return darkBase(inner);
+}
+
+function scDashboardOffice() {
+  var inner = '<div style="padding:16px 16px 8px;">'
+    + '<div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">Agent Office</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:16px;">Your team is hard at work</div>'
+    + '</div>';
+
+  // Office scene with labubu-style agents
+  inner += '<div style="padding:0 16px;margin-bottom:12px;">'
+    + '<div style="background:linear-gradient(135deg,#0A0A0A,#1A1A2A);border:1px solid ' + BORDER + ';border-radius:16px;padding:20px 12px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">';
+
+  var office = [
+    ['&#128269;', 'Analyst', AG_ANALYST, '0s'],
+    ['&#128161;', 'Strategist', AG_STRATEGIST, '0.3s'],
+    ['&#128737;', 'Sentinel', AG_SENTINEL, '0.6s'],
+    ['&#9889;', 'Executor', AG_EXECUTOR, '0.9s'],
+    ['&#128200;', 'Tracker', AG_TRACKER, '1.2s']
+  ];
+
+  for (var i = 0; i < office.length; i++) {
+    inner += '<div style="display:flex;flex-direction:column;align-items:center;width:52px;animation:labubuBob 2.5s ease-in-out infinite;animation-delay:' + office[i][3] + ';">'
+      + '<div style="width:42px;height:42px;border-radius:12px;background:' + office[i][2] + '30;border:1.5px solid ' + office[i][2] + ';display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:4px;">' + office[i][0] + '</div>'
+      + '<div style="font-size:8px;font-weight:700;color:' + office[i][2] + ';text-align:center;">' + office[i][1] + '</div>'
+      + '</div>';
+  }
+  inner += '</div></div>';
+
+  // Discussion bubble
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:12px;margin-bottom:12px;">'
+    + '<div style="font-size:10px;color:' + TXT3 + ';margin-bottom:6px;">LATEST DISCUSSION</div>'
+    + '<div style="display:flex;gap:8px;align-items:flex-start;">'
+    + '<div style="width:20px;height:20px;border-radius:5px;background:' + AG_ANALYST + '30;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">&#128269;</div>'
+    + '<div style="background:#111;border-radius:8px;padding:8px 10px;flex:1;">'
+    + '<div style="font-size:10px;font-weight:700;color:' + AG_ANALYST + ';margin-bottom:3px;">Analyst</div>'
+    + '<div style="font-size:11px;color:#ccc;line-height:1.4;">"BTC funding rate turned negative on Binance. This often precedes a short squeeze. Strategist, should we increase BTC exposure?"</div>'
+    + '</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;padding-left:28px;">'
+    + '<div style="width:20px;height:20px;border-radius:5px;background:' + AG_STRATEGIST + '30;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">&#128161;</div>'
+    + '<div style="background:#111;border-radius:8px;padding:8px 10px;flex:1;">'
+    + '<div style="font-size:10px;font-weight:700;color:' + AG_STRATEGIST + ';margin-bottom:3px;">Strategist</div>'
+    + '<div style="font-size:11px;color:#ccc;line-height:1.4;">"Good catch. Moving 3% from stablecoin reserve to BTC. Sentinel, confirm this stays within guardrails."</div>'
+    + '</div></div></div>';
+
+  // Action buttons
+  inner += '<div style="display:flex;gap:8px;margin-bottom:16px;">'
+    + '<button style="flex:1;padding:12px;border-radius:12px;border:1px solid ' + BORDER + ';background:transparent;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">&#128172; Trigger Discussion</button>'
+    + '<button style="flex:1;padding:12px;border-radius:12px;border:none;background:' + ACCENT + ';color:#000;font-size:13px;font-weight:700;cursor:pointer;">&#10133; New Strategy</button>'
+    + '</div></div>';
+
+  inner += pawNav();
+
+  return darkBase(inner);
+}
+
+function scDashboardAgentLog() {
+  var inner = '<div style="padding:16px 16px 8px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;">'
+    + '<div style="font-size:18px;color:' + TXT2 + ';cursor:pointer;">&#8592;</div>'
+    + '<div style="width:32px;height:32px;border-radius:8px;background:' + AG_ANALYST + '30;border:1.5px solid ' + AG_ANALYST + ';display:flex;align-items:center;justify-content:center;font-size:16px;">&#128269;</div>'
+    + '<div><div style="font-size:16px;font-weight:800;color:#fff;">Analyst</div>'
+    + '<div style="font-size:11px;color:' + AG_ANALYST + ';">Active — scanning markets</div></div>'
+    + '</div></div>';
+
+  // Timeline
+  inner += '<div style="padding:0 16px;">';
+  var logs = [
+    ['5m ago', 'Scanning BTC/USDT', 'Checking order book depth, whale wallets, and exchange inflows', AG_ANALYST],
+    ['12m ago', 'Detected whale movement', '2,400 BTC moved from cold wallet to exchange. Historically precedes sell pressure within 24-48h.', AG_ANALYST],
+    ['1h ago', 'Updated market sentiment', 'Sentiment shifted from "bullish" to "cautious" based on funding rates, OI, and social volume. Notified Strategist.', AG_ANALYST],
+    ['2h ago', 'Macro scan complete', 'Fed minutes released — no surprises. DXY stable at 104.2. No impact expected on crypto.', AG_ANALYST],
+    ['4h ago', 'Altcoin rotation signal', 'ETH/BTC ratio breaking out. Recommended 2% shift from BTC to ETH. Strategist approved.', AG_ANALYST]
+  ];
+
+  for (var i = 0; i < logs.length; i++) {
+    inner += '<div style="display:flex;gap:12px;margin-bottom:0;">'
+      + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">'
+      + '<div style="width:10px;height:10px;border-radius:50%;background:' + (i === 0 ? AG_ANALYST : '#333') + ';margin-top:4px;"></div>'
+      + '<div style="width:1px;flex:1;background:#222;"></div></div>'
+      + '<div style="padding-bottom:14px;">'
+      + '<div style="font-size:10px;color:' + TXT3 + ';margin-bottom:2px;">' + logs[i][0] + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;">' + logs[i][1] + '</div>'
+      + '<div style="font-size:11px;color:' + TXT2 + ';line-height:1.5;">' + logs[i][2] + '</div>'
+      + '</div></div>';
+  }
+  inner += '</div>';
+
+  inner += pawNav();
+
+  return darkBase(inner);
+}
+
+function scDashboardCharts() {
+  var inner = '<div style="padding:16px 16px 8px;">'
+    + '<div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;">Performance</div>'
+    + '<div style="font-size:12px;color:' + TXT2 + ';margin-bottom:12px;">Tracked by your Tracker agent</div>'
+    + '</div>';
+
+  // Tabs
+  inner += '<div style="padding:0 16px 12px;display:flex;gap:4px;">';
+  var tabs = ['Portfolio', 'Market', 'P&L'];
+  for (var i = 0; i < tabs.length; i++) {
+    var isActive = i === 0;
+    inner += '<div style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;'
+      + (isActive ? 'background:' + ACCENT + ';color:#000;' : 'background:#222;color:' + TXT2 + ';')
+      + '">' + tabs[i] + '</div>';
+  }
+  inner += '</div>';
+
+  // Chart placeholder
+  inner += '<div style="padding:0 16px;">'
+    + '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:16px;margin-bottom:12px;height:160px;position:relative;overflow:hidden;">'
+    + '<div style="position:absolute;bottom:20px;left:16px;right:16px;height:80px;">'
+    + '<svg width="100%" height="100%" viewBox="0 0 280 80" preserveAspectRatio="none">'
+    + '<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + ACCENT + '" stop-opacity="0.3"/><stop offset="100%" stop-color="' + ACCENT + '" stop-opacity="0"/></linearGradient></defs>'
+    + '<path d="M0,60 L20,55 L40,58 L60,45 L80,48 L100,35 L120,30 L140,32 L160,20 L180,25 L200,15 L220,18 L240,10 L260,12 L280,5" fill="none" stroke="' + ACCENT + '" stroke-width="2"/>'
+    + '<path d="M0,60 L20,55 L40,58 L60,45 L80,48 L100,35 L120,30 L140,32 L160,20 L180,25 L200,15 L220,18 L240,10 L260,12 L280,5 L280,80 L0,80 Z" fill="url(#cg)"/>'
+    + '</svg></div>'
+    + '<div style="font-size:22px;font-weight:800;color:#fff;">$51,150</div>'
+    + '<div style="font-size:12px;color:' + GREEN + ';">+$1,150 (+2.30%)</div>'
+    + '<div style="font-size:10px;color:' + TXT3 + ';margin-top:2px;">Past 7 days</div>'
+    + '</div>';
+
+  // Key metrics
+  inner += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">';
+  var metrics = [
+    ['Sharpe Ratio', '1.82', GREEN, 'Above benchmark'],
+    ['Win Rate', '64%', ACCENT, '18 of 28 trades'],
+    ['Total Return', '+2.30%', GREEN, 'Since launch'],
+    ['Max Drawdown', '-3.1%', AG_EXECUTOR, 'Limit: -15%']
+  ];
+  for (var i = 0; i < metrics.length; i++) {
+    inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:10px;padding:12px;">'
+      + '<div style="font-size:10px;color:' + TXT3 + ';margin-bottom:4px;">' + metrics[i][0] + '</div>'
+      + '<div style="font-size:18px;font-weight:800;color:' + metrics[i][2] + ';">' + metrics[i][1] + '</div>'
+      + '<div style="font-size:9px;color:' + TXT2 + ';margin-top:2px;">' + metrics[i][3] + '</div>'
+      + '</div>';
+  }
+  inner += '</div></div>';
+
+  inner += pawNav();
+
+  return darkBase(inner);
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 6: BAD DAY SCENARIO
+// ═══════════════════════════════════════════
+function scBadDayPre() {
+  var inner = '';
+  inner += balanceHeader('$50,000.00', '+$0.00', '0.00%');
+
+  inner += '<div style="padding:0 16px;">';
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;margin-bottom:10px;">'
+    + '<div style="font-size:11px;color:' + TXT3 + ';margin-bottom:6px;">ACTIVE STRATEGY</div>'
+    + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Bullish BTC DCA</div>'
+    + '<div style="display:flex;gap:12px;">'
+    + '<div style="font-size:11px;color:' + TXT2 + ';">BTC 40% | ETH 20% | USDT 25% | ARB 15%</div>'
+    + '</div></div>';
+
+  inner += '<div style="background:#052E16;border:1px solid #059669;border-radius:12px;padding:14px;margin-bottom:10px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+    + '<div style="font-size:14px;">&#128737;</div>'
+    + '<div style="font-size:12px;font-weight:700;color:' + GREEN + ';">Sentinel — All Systems Normal</div></div>'
+    + '<div style="font-size:11px;color:#6EE7B7;">Guardrail: -15% max drawdown | Current: 0.0%</div>'
+    + '</div>';
+
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:12px;">'
+    + '<div style="font-size:11px;color:' + TXT3 + ';margin-bottom:6px;">RECENT ACTIVITY</div>'
+    + '<div style="font-size:11px;color:#ccc;padding:4px 0;">&#128269; Analyst: BTC consolidating around $68K</div>'
+    + '<div style="font-size:11px;color:#ccc;padding:4px 0;">&#9889; Executor: DCA buy scheduled in 4 hours</div>'
+    + '<div style="font-size:11px;color:#ccc;padding:4px 0;">&#128200; Tracker: 7-day performance +0.0%</div>'
+    + '</div></div>';
+
+  inner += pawNav();
+
+  return darkBase(inner);
+}
+
+function scBadDayCrash() {
+  var inner = '';
+
+  // Red alert banner
+  inner += '<div style="background:#7F1D1D;padding:10px 16px;display:flex;align-items:center;gap:8px;margin-top:40px;">'
+    + '<div style="font-size:16px;">&#128680;</div>'
+    + '<div style="font-size:12px;font-weight:700;color:' + RED + ';">BTC FLASH CRASH: -12% in 45 minutes</div>'
+    + '</div>';
+
+  // Dropping balance
+  inner += '<div style="padding:12px 16px 8px;">'
+    + '<div style="font-size:10px;color:' + RED + ';font-weight:600;margin-bottom:4px;">&#9660; PORTFOLIO DECLINING</div>'
+    + '<div style="font-size:28px;font-weight:800;color:' + RED + ';">$46,900</div>'
+    + '<div style="font-size:13px;color:' + RED + ';">-$3,100 (-6.2%)</div>'
+    + '</div>';
+
+  // Sentinel activating
+  inner += '<div style="padding:0 16px;">';
+  inner += '<div style="background:#0A1A0A;border:2px solid ' + AG_SENTINEL + ';border-radius:12px;padding:14px;margin-bottom:10px;animation:pulse 1.5s ease-in-out infinite;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+    + '<div style="width:28px;height:28px;border-radius:8px;background:' + AG_SENTINEL + '30;display:flex;align-items:center;justify-content:center;font-size:14px;">&#128737;</div>'
+    + '<div><div style="font-size:13px;font-weight:800;color:' + AG_SENTINEL + ';">SENTINEL ACTIVATED</div>'
+    + '<div style="font-size:10px;color:#6EE7B7;">Emergency protocol in progress</div></div></div>'
+    + '<div style="font-size:11px;color:#ccc;line-height:1.6;">'
+    + '&#10003; Reducing BTC exposure by 50%<br>'
+    + '&#10003; Pausing all DCA buys<br>'
+    + '&#10003; Moving freed capital to USDT<br>'
+    + '&#9203; Calculating optimal exit points...'
+    + '</div></div>';
+
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:12px;">'
+    + '<div style="font-size:10px;color:' + TXT3 + ';margin-bottom:6px;">REAL-TIME AGENT ACTIONS</div>'
+    + '<div style="font-size:11px;color:' + AG_EXECUTOR + ';padding:4px 0;">&#9889; Executor: Market sell 0.15 BTC at $59,840</div>'
+    + '<div style="font-size:11px;color:' + AG_ANALYST + ';padding:4px 0;">&#128269; Analyst: Liquidation cascade detected on leveraged positions</div>'
+    + '<div style="font-size:11px;color:' + AG_STRATEGIST + ';padding:4px 0;">&#128161; Strategist: Shifting to defensive allocation</div>'
+    + '</div></div>';
+
+  inner += pawNav();
+
+  return darkBase(inner);
+}
+
+function scBadDayRecovery() {
+  var inner = '<div style="text-align:center;padding:30px 20px 16px;">'
+    + '<div style="font-size:64px;margin-bottom:12px;">&#128737;</div>'
+    + '<div style="font-size:22px;font-weight:800;color:' + AG_SENTINEL + ';margin-bottom:6px;">Sentinel Saved $2,800</div>'
+    + '<div style="font-size:13px;color:' + TXT2 + ';">Your guardrails worked as designed</div>'
+    + '</div>';
+
+  inner += '<div style="padding:0 16px;">';
+
+  // Key numbers
+  inner += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">'
+    + '<div style="background:#052E16;border:1px solid #059669;border-radius:10px;padding:12px;text-align:center;">'
+    + '<div style="font-size:10px;color:#6EE7B7;">Actual Drawdown</div>'
+    + '<div style="font-size:22px;font-weight:800;color:' + GREEN + ';">-6.2%</div>'
+    + '<div style="font-size:9px;color:#059669;">Limit: -15%</div></div>'
+    + '<div style="background:#052E16;border:1px solid #059669;border-radius:10px;padding:12px;text-align:center;">'
+    + '<div style="font-size:10px;color:#6EE7B7;">Loss Avoided</div>'
+    + '<div style="font-size:22px;font-weight:800;color:' + GREEN + ';">$2,800</div>'
+    + '<div style="font-size:9px;color:#059669;">Without Sentinel: -12%</div></div></div>';
+
+  // Actions taken
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;margin-bottom:12px;">'
+    + '<div style="font-size:11px;color:' + TXT3 + ';margin-bottom:8px;">ACTIONS TAKEN</div>';
+  var actions = [
+    'Sold 50% of BTC position at $59,840 (market sell)',
+    'Paused all scheduled DCA buys',
+    'Moved $8,960 to USDT stablecoin',
+    'Set re-entry trigger at BTC $61,500 (Analyst watching)',
+    'Sent push notification + email alert to user'
+  ];
+  for (var i = 0; i < actions.length; i++) {
+    inner += '<div style="display:flex;gap:6px;padding:4px 0;"><span style="color:' + GREEN + ';font-size:11px;">&#10003;</span><span style="font-size:11px;color:#ccc;">' + actions[i] + '</span></div>';
+  }
+  inner += '</div>';
+
+  inner += '<div style="background:#1A0A2E;border:1px solid #7C3AED;border-radius:10px;padding:10px 12px;margin-bottom:12px;">'
+    + '<div style="font-size:10px;font-weight:700;color:#C4B5FD;margin-bottom:3px;">&#128161; BINANCE AI PRO COMPARISON</div>'
+    + '<div style="font-size:11px;color:#9F7AEA;">Binance AI Pro has no dedicated risk agent. Without Sentinel, the full -12% drawdown would have hit your portfolio.</div>'
+    + '</div></div>';
+
+  inner += ctaBtn('Back to Dashboard', false);
+
+  return darkBase(inner);
+}
+
+function scBadDayMorning() {
+  // Lock screen notification style
+  return '<div style="width:100%;height:100%;background:linear-gradient(160deg,#0A0A1E,#101020,#0A1A1A);display:flex;flex-direction:column;align-items:center;padding-top:40px;font-family:-apple-system,sans-serif;">'
+    + '<div style="font-size:52px;font-weight:200;color:#fff;line-height:1;margin-bottom:4px;">7:32</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:28px;">Saturday, March 29</div>'
+
+    // Notification card
+    + '<div style="width:calc(100% - 24px);background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);border-radius:14px;padding:12px 14px;margin-bottom:10px;">'
+    + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">'
+    + '<div style="width:22px;height:22px;border-radius:6px;background:' + ACCENT + ';display:flex;align-items:center;justify-content:center;font-size:12px;">&#129302;</div>'
+    + '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.8);">AI PAW</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-left:auto;">now</div>'
+    + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">&#128737; Your portfolio was protected overnight</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5;">'
+    + 'BTC dropped 12% at 2:34 AM. Sentinel activated emergency protocol, limiting your loss to -6.2% and saving ~$2,800. All agents collaborated to move your portfolio to a defensive position.'
+    + '</div>'
+    + '<div style="display:flex;gap:7px;margin-top:10px;">'
+    + '<div style="flex:1;padding:7px;border-radius:8px;background:rgba(255,255,255,0.15);text-align:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;">Review</div>'
+    + '<div style="flex:1;padding:7px;border-radius:8px;background:rgba(255,255,255,0.15);text-align:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;">Dismiss</div>'
+    + '</div></div>'
+
+    // Second notification - morning summary
+    + '<div style="width:calc(100% - 24px);background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border-radius:14px;padding:12px 14px;">'
+    + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">'
+    + '<div style="width:22px;height:22px;border-radius:6px;background:' + ACCENT + ';display:flex;align-items:center;justify-content:center;font-size:12px;">&#129302;</div>'
+    + '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.8);">AI PAW Morning Summary</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-left:auto;">7:00 AM</div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5;">'
+    + 'Overnight: 3 trades executed, 1 emergency protocol, portfolio now 60% defensive. '
+    + 'BTC showing recovery signals. Analyst recommends waiting 24h before re-entry.'
+    + '</div></div>'
+    + '</div>';
+}
+
+// ═══════════════════════════════════════════
+//  FLOW 7: TRANSFER FUNDS
+// ═══════════════════════════════════════════
+function scTransferAdd() {
+  var inner = '<div style="padding:16px 16px 8px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">'
+    + '<div style="font-size:18px;color:' + TXT2 + ';cursor:pointer;">&#8592;</div>'
+    + '<div style="font-size:18px;font-weight:800;color:#fff;">Transfer Funds</div>'
+    + '</div></div>';
+
+  // Toggle
+  inner += '<div style="padding:0 16px 12px;display:flex;gap:0;">'
+    + '<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:700;background:' + ACCENT + ';color:#000;border-radius:8px 0 0 8px;">Add Funds</div>'
+    + '<div style="flex:1;padding:10px;text-align:center;font-size:13px;font-weight:700;background:#222;color:' + TXT2 + ';border-radius:0 8px 8px 0;border:1px solid ' + BORDER + ';border-left:none;">Transfer Out</div>'
+    + '</div>';
+
+  // From / To
+  inner += '<div style="padding:0 16px;">';
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;margin-bottom:12px;">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:12px;">'
+    + '<div><div style="font-size:10px;color:' + TXT3 + ';margin-bottom:2px;">FROM</div>'
+    + '<div style="font-size:13px;font-weight:700;color:#fff;">Main Account</div>'
+    + '<div style="font-size:10px;color:' + TXT2 + ';">Available: 12,450.00 USDT</div></div>'
+    + '<div style="font-size:20px;color:' + TXT3 + ';">&#128179;</div></div>'
+    + '<div style="text-align:center;font-size:14px;color:' + TXT3 + ';margin-bottom:12px;">&#8595;</div>'
+    + '<div><div style="font-size:10px;color:' + TXT3 + ';margin-bottom:2px;">TO</div>'
+    + '<div style="font-size:13px;font-weight:700;color:#fff;">AI PAW Sub-Account</div>'
+    + '<div style="font-size:10px;color:' + AG_SENTINEL + ';">&#128274; Isolated from main balance</div></div>'
+    + '</div>';
+
+  // Amount input
+  inner += '<div style="background:' + CARD + ';border:1px solid ' + ACCENT + ';border-radius:12px;padding:14px;margin-bottom:10px;">'
+    + '<div style="font-size:10px;color:' + TXT3 + ';margin-bottom:6px;">AMOUNT (USDT)</div>'
+    + '<div style="font-size:32px;font-weight:800;color:#fff;">5,000</div>'
+    + '</div>';
+
+  // Quick amounts
+  inner += '<div style="display:flex;gap:6px;margin-bottom:16px;">';
+  var amounts = ['$1K', '$5K', '$10K', 'MAX'];
+  for (var i = 0; i < amounts.length; i++) {
+    var isActive = i === 1;
+    inner += '<div style="flex:1;padding:8px;text-align:center;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;'
+      + (isActive ? 'background:' + ACCENT + '20;color:' + ACCENT + ';border:1px solid ' + ACCENT + '44;' : 'background:#222;color:' + TXT2 + ';border:1px solid ' + BORDER + ';')
+      + '">' + amounts[i] + '</div>';
+  }
+  inner += '</div></div>';
+
+  inner += ctaBtn('Confirm Transfer', false);
+
+  return darkBase(inner);
+}
+
+function scTransferSuccess() {
+  var inner = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;text-align:center;padding:20px;">'
+    + '<div style="width:64px;height:64px;border-radius:50%;background:#052E16;border:2px solid ' + GREEN + ';display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px;">&#10003;</div>'
+    + '<div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;">Transfer Complete</div>'
+    + '<div style="font-size:14px;color:' + TXT2 + ';margin-bottom:20px;">Funds moved successfully</div>'
+    + '<div style="background:' + CARD + ';border:1px solid ' + BORDER + ';border-radius:12px;padding:14px;width:100%;margin-bottom:24px;">'
+    + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-size:12px;color:' + TXT2 + ';">Amount</span><span style="font-size:12px;font-weight:700;color:#fff;">5,000 USDT</span></div>'
+    + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-size:12px;color:' + TXT2 + ';">From</span><span style="font-size:12px;font-weight:700;color:#fff;">Main Account</span></div>'
+    + '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-size:12px;color:' + TXT2 + ';">To</span><span style="font-size:12px;font-weight:700;color:#fff;">AI PAW Sub-Account</span></div>'
+    + '</div>'
+    + '</div>';
+  inner += ctaBtn('Back to Dashboard', false);
+
+  return darkBase(inner);
+}
+
+
+// ════════════════════════════════════════════════
+//  FLOWS ARRAY
+// ════════════════════════════════════════════════
+var flows = [
+  {
+    id: 'scope', label: 'Scope', icon: '&#128203;', num: 'SP',
+    phase: 'ref', hasOptions: false, isDiagram: true,
+    steps: [
+      { label: 'Product Overview', sub: 'Target users, pain points, MVP scope',
+        screen: function(o){ return scScopeOverview(); },
+        notes: {
+          stepLabel: 'Scope \u2014 Product Overview',
+          title: 'OKX AI PAW \u2014 Multi-Agent AI Trading',
+          actor: 'PM', actorDesc: 'Product scope reference document',
+          desc: 'OKX AI PAW is a multi-agent AI trading product where users create a dedicated AI sub-account and let a team of 5 specialized agents manage their crypto 24/7. One-liner: "We built an AI fund management team for users." Built on: OpenClaw + Agent TradeKit (MCP) + OnchainOS (Web3) + OKX CEX APIs. Primary target: part-time traders (25-45, $5K-$50K, trades 3-5x/week). Secondary: systematic traders ($20K-$200K) who know strategies but can\u2019t code automation.',
+          keys: [
+            '<b>5 Pain Points Solved:</b> (1) Miss trades while sleeping (73% of moves happen outside US hours), (2) Don\u2019t trust AI with money (#1 barrier), (3) Panic-sell during crashes (costs 15-20% annually), (4) Can\u2019t monitor everything at once, (5) Don\u2019t know if AI is actually helping',
+            '<b>MVP (P0):</b> 5 AI Agents + Sub-account + Natural language input + Agent Activity Feed + Dashboard + risk gauge + Crash simulation + Agent pipeline orchestration + Pre-built &amp; self-built strategies + CeFi + Web3 access',
+            '<b>P1:</b> Strategy marketplace, derivatives, advanced analytics dashboard',
+            '<b>NOT for:</b> Pure beginners (&rarr; Smart Trade 2.0), Professional quants (&rarr; Agent TradeKit API), Users &lt;$1K (&rarr; OKX Trading Bots)',
+            '<b>Key Design Decision:</b> Dashboard-first (80/15/5 interaction split). Users want to passively monitor, not actively chat.',
+            '<b>Pricing:</b> Free &rarr; $19.99/mo (Pro) &rarr; $49.99/mo (Elite). Free tier: 1 strategy, $1K limit.'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'competitors', label: 'Competitors', icon: '&#128200;', num: 'CP',
+    phase: 'ref', hasOptions: false, isDiagram: true,
+    steps: [
+      { label: 'vs Binance AI Pro', sub: 'Feature comparison table',
+        screen: function(o){ return scCompetitors(); },
+        notes: {
+          stepLabel: 'Competitors \u2014 Direct Competitor Analysis',
+          title: 'OKX AI PAW vs Binance AI Pro vs 3Commas vs Cryptohopper',
+          actor: 'PM', actorDesc: 'Competitive landscape analysis (from PRD v0.3)',
+          desc: 'Four direct competitors analyzed. Binance AI Pro (launched Mar 25, 2026): single chatbot, $9.99/mo, chat-first, no dedicated risk management. 3Commas (2017): rule-based bots + AI layer, $37-59/mo, config-heavy. Cryptohopper (2017): cloud-based bots, $24-108/mo, complex UI. AI PAW differentiates with multi-agent architecture, dedicated Sentinel risk agent, transparent Activity Feed, and dashboard-first UX.',
+          keys: [
+            '<b>Architecture moat:</b> 5 specialized agents vs all competitors\u2019 single-system approach. Each agent has deep domain expertise \u2014 Sentinel can\u2019t be overridden by Strategist.',
+            '<b>Risk moat:</b> Only AI PAW has a dedicated autonomous risk agent with kill switch + emergency protocols. Competitors rely on basic stop-loss rules.',
+            '<b>Transparency moat:</b> Agent Activity Feed shows every decision + reasoning chain. Competitors show trade logs only (what, not why).',
+            '<b>UX moat:</b> Dashboard-first (80/15/5). Binance is chat-first; 3Commas and Cryptohopper are config-heavy dashboards.',
+            '<b>Pricing advantage:</b> Free tier available (view-only). Pro at $19.99 undercuts 3Commas ($37+) and Cryptohopper ($24+).',
+            '<b>Natural language:</b> Only AI PAW and Binance support NL input. 3Commas/Cryptohopper require manual configuration.',
+            '<b>Key weakness:</b> Binance has 250M+ platform users. 3Commas/Cryptohopper have established trust (since 2017). Speed to market is critical.'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'onboard', label: 'Onboarding', icon: '&#128075;', num: '01',
+    phase: 'p1', hasOptions: false,
+    steps: [
+      { label: 'Welcome \u2014 Meet AI PAW', sub: 'Full-page intro, feature cards',
+        screen: function(o){ return scOnboardWelcome(); },
+        notes: {
+          stepLabel: 'Flow 01 \u2014 Onboarding',
+          title: 'Welcome \u2014 Meet AI PAW',
+          actor: 'user', actorDesc: 'New user arrives at AI PAW for the first time',
+          desc: 'Onboarding page does not show a balance header because new users have $0 in their AI PAW sub-account. This is a full-page introduction with zero chrome \u2014 the entire viewport is dedicated to communicating the value proposition. Three feature cards highlight the key differentiators: 5 AI agents, sub-account isolation, and 24/7 operation.',
+          keys: [
+            '<b>Entry point:</b> User taps "AI PAW" tab in OKX app bottom nav, or follows a deep link from marketing campaign.',
+            '<b>CTA:</b> "Learn More" button in OKX yellow-green (#CDFF00) routes to step 2 (How It Works + T&C).',
+            '<b>No balance shown:</b> New user has $0. Showing $0 would feel discouraging. Balance header appears only after funds are added.',
+            '<b>Dark theme:</b> Matches OKX app native dark mode. All screens use #000 background with #CDFF00 accent.'
+          ]
+        }
+      },
+      { label: 'How It Works + T&C', sub: 'Three-step explainer, consent gate',
+        screen: function(o){ return scOnboardHowItWorks(); },
+        notes: {
+          stepLabel: 'Flow 01 \u2014 Onboarding',
+          title: 'How It Works + Terms & Conditions',
+          actor: 'user', actorDesc: 'User reads how AI PAW works and agrees to T&C',
+          desc: 'Three numbered steps explain the core loop: (1) tell your strategy, (2) set guardrails, (3) watch your team work. Below the steps, trust-building checkmarks guarantee sub-account isolation, kill switch availability, and full transparency. The T&C checkbox must be checked before the "Get Started" button enables.',
+          keys: [
+            '<b>Disabled state:</b> "Get Started" button renders as #333 background with #666 text (visually muted) when T&C is unchecked. A toggleTC() JS function would toggle the checkbox and enable/disable the button.',
+            '<b>Compliance requirement:</b> T&C acceptance is logged server-side with timestamp and user ID. Required before any trading activity.',
+            '<b>Trust signals:</b> Three green checkmarks (sub-account isolation, kill switch, transparency) address top user fears about AI trading.',
+            '<b>Copy tone:</b> Confident but not aggressive. No "guaranteed returns" language. Emphasis on user control.'
+          ]
+        }
+      },
+      { label: 'Tutorial Dashboard', sub: 'Getting started cards, no balance',
+        screen: function(o){ return scOnboardTutorial(); },
+        notes: {
+          stepLabel: 'Flow 01 \u2014 Onboarding',
+          title: 'Tutorial Dashboard',
+          actor: 'user', actorDesc: 'User sees tutorial cards explaining the product',
+          desc: 'No balance header shown because the user has not yet funded their sub-account. This tutorial is a full-page experience within the shared app layout. The top section (balance, status) is hidden via showSharedLayout(true). Four getting-started cards walk the user through the core concepts: chat with agents, agents build strategy, watch them work, and you remain in control.',
+          keys: [
+            '<b>No balance header:</b> New user, $0 balance. Top section is hidden via showSharedLayout(true) to avoid showing empty states.',
+            '<b>Card order:</b> Deliberately sequenced to build confidence: first show the conversational input, then the AI doing work, then transparency, then control. Ends with control because that is the biggest anxiety for new AI trading users.',
+            '<b>"Get Started" CTA:</b> Routes to Strategy Builder (Flow 3) on first use. If user has already set up a strategy, this tutorial is not shown again.',
+            '<b>Skip option:</b> Power users can skip this tutorial. Not shown in the mockup but available via a small "Skip" link in top-right (implemented in production).'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'subscription', label: 'Subscription', icon: '&#128273;', num: '02',
+    phase: 'p1', hasOptions: false,
+    steps: [
+      { label: 'Subscription Paywall', sub: 'Pro plan, payment method',
+        screen: function(o){ return scSubscriptionPaywall(); },
+        notes: {
+          stepLabel: 'Flow 02 \u2014 Subscription',
+          title: 'Subscription Paywall',
+          actor: 'user', actorDesc: 'User encounters paywall before executing trades',
+          desc: 'This screen is triggered from two entry points: (1) after Strategy Builder step 5 "Launch" when the user taps "Launch AI PAW", and (2) on first-time Transfer/Add Funds. A <code>hasPaid</code> boolean flag tracks payment state. After payment, subsequent actions skip the paywall entirely. The screen shows AI PAW Pro at 10 USDT/month with a "RECOMMENDED" badge, and a free tier option (view-only, no execution).',
+          keys: [
+            '<b>Dual entry points:</b> Strategy launch (launchStrategy() checks hasPaid) and Transfer funds (gatedAddFunds() checks hasPaid). Both redirect here if hasPaid is false.',
+            '<b>hasPaid flag:</b> Set to true after successful payment. Persists across sessions. Checked before any execution or fund transfer.',
+            '<b>Payment method:</b> Deducted from OKX Main Account USDT balance. No external payment processor needed.',
+            '<b>Free tier:</b> Intentionally limited to view-only dashboards. Users can see what agents would do, but cannot execute. This creates FOMO and drives conversion.',
+            '<b>Pricing strategy:</b> $10/mo is below the "impulse buy" threshold for crypto traders. We may introduce a $50/mo "Pro+" tier with priority execution in P1.'
+          ]
+        }
+      },
+      { label: 'Payment Success', sub: 'Confirmation, routing logic',
+        screen: function(o){ return scPaymentSuccess(); },
+        notes: {
+          stepLabel: 'Flow 02 \u2014 Subscription',
+          title: 'Payment Success',
+          actor: 'system', actorDesc: 'System confirms subscription activation',
+          desc: 'Sets hasPaid=true in local state and server-side. The "Continue" button routes to different destinations depending on the entry point: if the user came from Strategy Builder (step 5 launch), continue goes to Strategy Launch celebration (step 6). If the user came from Transfer/Add Funds, continue goes to the Transfer Funds screen.',
+          keys: [
+            '<b>State update:</b> hasPaid = true. POST /api/v1/subscription/activate with userId and planId.',
+            '<b>Routing logic:</b> Continue button checks a <code>paymentOrigin</code> variable. "strategy" \u2192 go to strategy launch. "transfer" \u2192 go to transfer funds screen.',
+            '<b>Celebration pattern:</b> Party emoji + green confirmation badge. Matches the pattern used in Strategy Launch celebration for visual consistency.',
+            '<b>Email receipt:</b> Subscription confirmation email sent automatically with billing details and cancellation instructions.'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'strategy', label: 'Strategy Builder', icon: '&#128161;', num: '03',
+    phase: 'p1', hasOptions: false,
+    steps: [
+      { label: 'Describe Strategy', sub: 'Natural language thesis input',
+        screen: function(o){ return scStrategyDescribe(); },
+        notes: {
+          stepLabel: 'Flow 03 \u2014 Strategy Builder',
+          title: 'Describe Your Investment Strategy',
+          actor: 'user', actorDesc: 'User describes their investment thesis in plain English',
+          desc: 'Natural language input field where the user describes their investment thesis. The NLP engine (POST /api/v1/strategy/parse) extracts: assets mentioned, sentiment (bullish/bearish/neutral), risk tolerance (conservative/moderate/aggressive), time horizon (days/weeks/months), and dollar amounts. The Analyst agent is activated immediately to begin scanning related market data for the mentioned assets.',
+          keys: [
+            '<b>API:</b> POST /api/v1/strategy/parse \u2014 NLP engine extracts structured data from free-text input. Returns: { assets: ["BTC","ETH"], sentiment: "bullish", riskTolerance: 0.15, timeHorizon: "medium", amount: 50000 }',
+            '<b>Example prompts:</b> Pre-populated hint text shows a realistic example. Users can also tap suggested tags (Bullish BTC, DCA Strategy, etc.) to scaffold their input.',
+            '<b>Agent activation:</b> Analyst agent begins scanning markets for mentioned assets immediately after parsing. This means step 2 (allocation) loads faster because market data is already cached.',
+            '<b>Validation:</b> Minimum 10 characters. Must mention at least one tradable asset. If no asset detected, show inline error: "Please mention specific assets (e.g., BTC, ETH, SOL)."'
+          ]
+        }
+      },
+      { label: 'AI Allocation', sub: 'Strategist recommendation',
+        screen: function(o){ return scStrategyAllocation(); },
+        notes: {
+          stepLabel: 'Flow 03 \u2014 Strategy Builder',
+          title: 'Strategist\u2019s Recommended Allocation',
+          actor: 'system', actorDesc: 'Strategist agent generates portfolio allocation',
+          desc: 'The Strategist agent generates a portfolio allocation based on the parsed thesis and current market conditions. GET /api/v1/strategy/allocation returns allocation cards with asset, type, percentage, dollar amount, and reasoning. Each card shows a brief justification that appears on tap. User can "Adjust" (modify percentages) or "Accept" to proceed.',
+          keys: [
+            '<b>API:</b> GET /api/v1/strategy/allocation?strategyId=xxx \u2014 returns recommended allocation with reasoning for each position.',
+            '<b>Adjust flow:</b> Tapping "Adjust" opens inline sliders for each allocation. Total must equal 100%. Strategist re-validates adjusted allocation for risk coherence.',
+            '<b>Allocation types:</b> Spot (direct exposure), Earn (yield products), Funding Arb (delta-neutral strategies). Each has different risk profiles clearly labeled.',
+            '<b>Reasoning on tap:</b> Each allocation card expands to show the Strategist\u2019s reasoning. e.g., "ETH/BTC ratio is at 6-month support, suggesting relative outperformance ahead."'
+          ]
+        }
+      },
+      { label: 'Set Guardrails', sub: 'Sentinel limits, kill switch',
+        screen: function(o){ return scStrategyGuardrails(); },
+        notes: {
+          stepLabel: 'Flow 03 \u2014 Strategy Builder',
+          title: 'Sentinel Guardrails',
+          actor: 'user', actorDesc: 'User configures risk limits enforced by Sentinel',
+          desc: 'Sentinel agent enforces these limits. They CANNOT be overridden by other agents \u2014 this is a hard architectural constraint, not a soft preference. The max drawdown slider ranges from -5% (very conservative) to -25% (aggressive), defaulting to -15%. The kill switch is always available and halts all agent activity, cancels pending orders, and moves funds to stablecoin.',
+          keys: [
+            '<b>API:</b> PUT /api/v1/sentinel/guardrails { maxDrawdown: -15, stopLoss: true, killSwitch: true }',
+            '<b>Architectural constraint:</b> Sentinel has higher privilege than other agents. Even if Strategist and Executor agree on a trade, Sentinel can veto it if it violates guardrails.',
+            '<b>Kill switch:</b> Available from any screen via a persistent red button. One tap halts all activity. No confirmation dialog \u2014 speed matters in emergencies.',
+            '<b>Default -15%:</b> Based on research showing most intermediate traders\u2019 emotional pain threshold is around -15% to -20%. Conservative default reduces support tickets.'
+          ]
+        }
+      },
+      { label: 'Risk Assessment', sub: 'Compliance disclosure',
+        screen: function(o){ return scStrategyRisk(); },
+        notes: {
+          stepLabel: 'Flow 03 \u2014 Strategy Builder',
+          title: 'Risk Assessment & Disclosure',
+          actor: 'both', actorDesc: 'System generates risk assessment, user acknowledges',
+          desc: 'System-generated risk disclosure required by compliance. The risk score (6.2/10 in this example) is calculated based on asset volatility, allocation concentration, and strategy type. The user must scroll to the bottom of the risk factors before the "Acknowledge" button enables. This is a regulatory requirement in most jurisdictions where OKX operates.',
+          keys: [
+            '<b>Compliance requirement:</b> Risk disclosure must be shown before any AI-assisted trading begins. Acknowledgment is logged with timestamp.',
+            '<b>Scroll-to-enable:</b> "I Acknowledge the Risks" button is disabled until user scrolls to the bottom of the risk list. Prevents rubber-stamping.',
+            '<b>Risk score algorithm:</b> Weighted combination of: asset volatility (40%), concentration risk (25%), strategy complexity (20%), historical drawdown potential (15%).',
+            '<b>Regulatory note:</b> Different jurisdictions may require additional disclosures. This screen is template-based and can be extended per-region.'
+          ]
+        }
+      },
+      { label: 'Choose Mode', sub: 'PAL (manual) vs PAM (auto)',
+        screen: function(o){ return scStrategyMode(); },
+        notes: {
+          stepLabel: 'Flow 03 \u2014 Strategy Builder',
+          title: 'Choose Operating Mode',
+          actor: 'user', actorDesc: 'User selects between human-in-the-loop or fully autonomous',
+          desc: 'Two modes: PAL Mode (human in the loop) where agents propose trades and the user approves via push notification, and PAM Mode (fully autonomous) where agents execute within guardrails and the user gets a morning summary. The "Launch AI PAW" button calls launchStrategy() which checks hasPaid. If false, the user is redirected to the Subscription Paywall (Flow 2). If true, the strategy is activated.',
+          keys: [
+            '<b>PAL Mode:</b> Every trade requires user approval via push notification. 30-minute expiry window. If user doesn\u2019t respond, trade is cancelled. Best for users learning to trust the system.',
+            '<b>PAM Mode:</b> Fully autonomous within guardrails. Sentinel still enforces limits. Morning summary email + push at 7 AM local time. Best for experienced users.',
+            '<b>Mode switching:</b> Users can switch between PAL and PAM at any time from Settings. No strategy restart required.',
+            '<b>Launch gate:</b> launchStrategy() checks hasPaid boolean. If false \u2192 redirect to Subscription Paywall (Flow 2, step 1). If true \u2192 proceed to step 6 (Launch Celebration).'
+          ]
+        }
+      },
+      { label: 'Launch Celebration', sub: 'All agents activated',
+        screen: function(o){ return scStrategyLaunch(); },
+        notes: {
+          stepLabel: 'Flow 03 \u2014 Strategy Builder',
+          title: 'Strategy Launched \u2014 Agents Activated',
+          actor: 'system', actorDesc: 'System activates all 5 agents and establishes real-time feed',
+          desc: 'POST /api/v1/strategy/activate starts all 5 agents simultaneously. A WebSocket connection is established for real-time agent activity feed updates. Each agent shows its initial status: Analyst scanning, Strategist allocation set, Sentinel guardrails armed, Executor ready, Tracker monitoring. The user can proceed to the Agent Workspace (Dashboard) or start a new strategy.',
+          keys: [
+            '<b>API:</b> POST /api/v1/strategy/activate { strategyId, mode: "PAL"|"PAM", guardrails: {...} }',
+            '<b>WebSocket:</b> wss://ws.okx.com/ai-paw/feed?userId=xxx \u2014 real-time events for agent actions, trade executions, alerts.',
+            '<b>Agent boot sequence:</b> Analyst starts first (needs market data), then Strategist (needs Analyst data), then Sentinel (needs guardrail config), then Executor (needs Strategist allocation), then Tracker (monitors all).',
+            '<b>"Start Over" link:</b> Allows user to discard this strategy and create a new one. Existing funds remain in sub-account.'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'dashboard', label: 'Dashboard', icon: '&#128187;', num: '04',
+    phase: 'p1', hasOptions: false,
+    steps: [
+      { label: 'Main Dashboard', sub: 'Balance, activity feed, chat bar',
+        screen: function(o){ return scDashboardMain(); },
+        notes: {
+          stepLabel: 'Flow 04 \u2014 Dashboard',
+          title: 'Main Dashboard',
+          actor: 'both', actorDesc: 'User monitors agents; system updates in real-time',
+          desc: 'Balance header is always visible showing AI PAW sub-account total, weekly P&L change, and an active status indicator (green dot). The "+" button opens a Quick Actions overlay with options: Transfer, Agents, Strategy, Charts, History, Guide, Settings. The middle section (Agent Activity Feed) is scrollable. A floating chat bar at the bottom allows the user to communicate with agents directly.',
+          keys: [
+            '<b>Balance header:</b> Always visible. Updates in real-time via WebSocket. Shows total portfolio value and weekly change.',
+            '<b>"+" Quick Actions:</b> Opens overlay with grid of actions. Replaces a traditional hamburger menu. Most-used actions (Transfer, Agents) are in top row.',
+            '<b>Activity Feed:</b> Shows last 20 agent actions. Each entry has: agent icon + color, agent name, timestamp, and action description. Paginated with infinite scroll.',
+            '<b>Chat bar:</b> Floating at bottom. User can type natural language instructions. e.g., "Sell 10% of my BTC position" \u2192 parsed and routed to relevant agent.',
+            '<b>80/20 rule:</b> 80% of user sessions are passive monitoring (just checking the dashboard). Only 20% involve active interaction (chat, strategy changes).'
+          ]
+        }
+      },
+      { label: 'Agent Office', sub: 'Animated agents, discussion view',
+        screen: function(o){ return scDashboardOffice(); },
+        notes: {
+          stepLabel: 'Flow 04 \u2014 Dashboard',
+          title: 'Agent Office',
+          actor: 'both', actorDesc: 'Animated agent workspace with inter-agent discussions',
+          desc: 'Five animated Labubu-style characters at virtual cubicles, each with a role tag and agent-specific color. CSS-only animation (labubuBob 2.5s ease-in-out infinite) with staggered delays creates a lively office scene. Each agent is clickable and navigates to its detail log. The discussion auto-cycles every 8 seconds showing recent inter-agent conversations. "New Strategy" button triggers a busy animation mode with paper piles.',
+          keys: [
+            '<b>Animation:</b> CSS keyframe "labubuBob" with 2.5s ease-in-out infinite. Each agent has a different animation-delay (0s, 0.3s, 0.6s, 0.9s, 1.2s) for natural movement.',
+            '<b>Clickable agents:</b> Tapping any agent navigates to its detail log (step 3). Active agent has a glowing border animation.',
+            '<b>Discussion feed:</b> Auto-rotates between recent inter-agent conversations. Shows how agents collaborate and reason about decisions.',
+            '<b>"New Strategy" busy mode:</b> When triggered, agents get paper pile emojis, typing animations, and a "team huddle" discussion bubble. Fun, anthropomorphic design.',
+            '<b>Engagement metric:</b> Average time spent on Agent Office is 2.3x longer than any other screen. Users find the animated agents engaging.'
+          ]
+        }
+      },
+      { label: 'Agent Detail Log', sub: 'Single agent action timeline',
+        screen: function(o){ return scDashboardAgentLog(); },
+        notes: {
+          stepLabel: 'Flow 04 \u2014 Dashboard',
+          title: 'Agent Detail Log',
+          actor: 'system', actorDesc: 'Detailed timeline of a single agent\u2019s actions',
+          desc: 'Shows the full activity timeline for a single agent (Analyst in this example). Each entry has a timestamp, action title, and detailed description. The timeline uses a vertical line with dots to create a chronological visual. The most recent action has an agent-colored dot; older actions have grey dots. Real-time updates via WebSocket push new entries to the top.',
+          keys: [
+            '<b>API:</b> GET /api/v1/agents/{agentId}/activity?limit=20&offset=0 \u2014 returns paginated activity log.',
+            '<b>WebSocket events:</b> New actions are pushed via WebSocket and prepended to the timeline with a fade-in animation.',
+            '<b>Back navigation:</b> Arrow returns to Agent Office (step 2) or Main Dashboard (step 1) depending on entry point.',
+            '<b>Filtering:</b> P1 feature: filter by action type (scan, alert, trade, adjustment). Not in MVP to keep scope tight.',
+            '<b>Export:</b> P1 feature: export agent log as CSV for tax reporting and audit purposes.'
+          ]
+        }
+      },
+      { label: 'Charts & Performance', sub: 'Portfolio chart, key metrics',
+        screen: function(o){ return scDashboardCharts(); },
+        notes: {
+          stepLabel: 'Flow 04 \u2014 Dashboard',
+          title: 'Charts & Performance Analytics',
+          actor: 'system', actorDesc: 'Tracker agent generates performance analytics',
+          desc: 'The Tracker agent generates all performance data shown here. GET /api/v1/portfolio/performance returns portfolio value timeseries, individual asset P&L, and calculated metrics. Charts are rendered client-side using an inline SVG (no external charting library in MVP). Three sub-tabs: Portfolio (overall), Market (benchmark comparison), P&L (profit/loss breakdown).',
+          keys: [
+            '<b>API:</b> GET /api/v1/portfolio/performance?period=7d \u2014 returns timeseries data, metrics, and asset-level P&L.',
+            '<b>Key metrics:</b> Sharpe ratio (risk-adjusted return), win rate (% of profitable trades), total return (since strategy launch), max drawdown (worst peak-to-trough).',
+            '<b>Inline SVG chart:</b> No external dependencies (Chart.js, D3, etc.) in MVP. Simple SVG path for the line chart. P1 will add interactive charts with tooltips.',
+            '<b>Benchmark comparison:</b> Market tab compares portfolio performance against BTC buy-and-hold. This demonstrates the value of active agent management vs passive holding.',
+            '<b>Attribution:</b> P1 feature: break down returns by agent. e.g., "Analyst\u2019s whale detection signal contributed +1.2% this week."'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'badday', label: 'Bad Day', icon: '&#128680;', num: '05',
+    phase: 'p1', hasOptions: false,
+    steps: [
+      { label: 'Pre-Crash State', sub: 'All systems normal',
+        screen: function(o){ return scBadDayPre(); },
+        notes: {
+          stepLabel: 'Flow 05 \u2014 Bad Day Scenario',
+          title: 'Pre-Crash State \u2014 All Systems Normal',
+          actor: 'system', actorDesc: 'Simulated scenario entry point showing normal operations',
+          desc: 'This is a simulated scenario demonstrating AI PAW\u2019s crash protection capability. Starting state: $50,000 portfolio, Bullish BTC DCA strategy active, Sentinel guardrail set at -15% max drawdown. All agents report normal status. This is what the dashboard looks like before a market crash.',
+          keys: [
+            '<b>Scenario purpose:</b> Demonstrates AI PAW\u2019s key differentiator vs Binance AI Pro \u2014 automated crash protection via Sentinel agent.',
+            '<b>Starting balance:</b> $50,000. Strategy: Bullish BTC DCA with 40% BTC, 20% ETH, 25% USDT Earn, 15% Funding Arb.',
+            '<b>Sentinel status:</b> Green "All Systems Normal" card shows the guardrail is armed and portfolio drawdown is 0.0%.',
+            '<b>Simulation note:</b> This is a walkthrough scenario, not a live demo. Designed for stakeholder presentations and user education.'
+          ]
+        }
+      },
+      { label: 'BTC Flash Crash -12%', sub: 'Sentinel activates emergency protocol',
+        screen: function(o){ return scBadDayCrash(); },
+        notes: {
+          stepLabel: 'Flow 05 \u2014 Bad Day Scenario',
+          title: 'BTC Flash Crash \u2014 Sentinel Activates',
+          actor: 'system', actorDesc: 'Sentinel detects crash and executes emergency protocol autonomously',
+          desc: 'BTC drops 12% in 45 minutes (a realistic scenario based on May 2021 and November 2022 events). WebSocket event: SENTINEL_ALERT triggers immediately. Sentinel autonomously: (1) reduces BTC exposure by 50% via market sell, (2) pauses all scheduled DCA buys, (3) moves freed capital to USDT stablecoin. All of this happens without any user action \u2014 the user may be asleep.',
+          keys: [
+            '<b>WebSocket event:</b> SENTINEL_ALERT fires when portfolio drawdown exceeds 50% of the configured max (i.e., -7.5% when limit is -15%). This gives Sentinel time to act before hitting the hard limit.',
+            '<b>Autonomous actions:</b> Sentinel does NOT wait for user approval, even in PAL mode. Emergency protocol overrides the human-in-the-loop requirement. User is notified after the fact.',
+            '<b>Speed:</b> From detection to first trade execution: target <30 seconds. Market sells are used (not limit orders) to guarantee execution.',
+            '<b>Binance comparison:</b> Binance AI Pro has no equivalent. Their chatbot cannot act autonomously. The user would wake up to a -12% loss.',
+            '<b>Red alert banner:</b> Persistent at top of screen. Cannot be dismissed until crisis is resolved.'
+          ]
+        }
+      },
+      { label: 'Sentinel Saves $2,800', sub: 'Recovery and impact summary',
+        screen: function(o){ return scBadDayRecovery(); },
+        notes: {
+          stepLabel: 'Flow 05 \u2014 Bad Day Scenario',
+          title: 'Sentinel Recovery \u2014 $2,800 Loss Avoided',
+          actor: 'system', actorDesc: 'System shows the impact of Sentinel\u2019s intervention',
+          desc: 'POST /api/v1/sentinel/emergency-protocol logs the full emergency response with reasoning, actions taken, and impact calculation. The actual drawdown was limited to -6.2% (vs the -15% guardrail limit and the -12% market crash). Without Sentinel, the portfolio would have lost $6,000. With Sentinel, the loss was $3,100 \u2014 saving approximately $2,800. This screen is the most important conversion tool for the product.',
+          keys: [
+            '<b>Impact calculation:</b> Without Sentinel: -12% of $50K = -$6,000. With Sentinel: -6.2% of $50K = -$3,100. Saved: $2,900 (rounded to $2,800 for conservative messaging).',
+            '<b>Actions transparency:</b> Full list of actions taken with timestamps. Users can verify every decision Sentinel made.',
+            '<b>Binance comparison callout:</b> Purple card explicitly states that Binance AI Pro cannot do this. Competitive positioning embedded in the product UX.',
+            '<b>Re-entry planning:</b> Analyst agent is already watching for BTC recovery signals. Will notify Strategist when conditions improve for re-entry.',
+            '<b>Emotional design:</b> Green colors, shield emoji, and positive framing ("saved $2,800") turn a negative event into a product success story.'
+          ]
+        }
+      },
+      { label: 'Morning Summary', sub: 'Lock screen notification',
+        screen: function(o){ return scBadDayMorning(); },
+        notes: {
+          stepLabel: 'Flow 05 \u2014 Bad Day Scenario',
+          title: 'Morning Summary \u2014 Lock Screen Notification',
+          actor: 'system', actorDesc: 'Push notification delivered while user was sleeping',
+          desc: 'The user wakes up at 7:32 AM to find two notifications on their lock screen. The first is an urgent alert about the overnight crash and Sentinel\u2019s intervention. The second is the regular morning summary with overnight activity digest. Push notification sent via POST /api/v1/notifications/send. Email summary also sent. This demonstrates the "works while you sleep" value proposition.',
+          keys: [
+            '<b>Push notification:</b> POST /api/v1/notifications/send { userId, type: "sentinel_alert", title: "...", body: "..." }. Sent immediately when emergency protocol activates.',
+            '<b>Morning summary:</b> Scheduled daily at 7 AM local time. Includes: overnight actions taken, P&L impact, current portfolio state, market context, and agent recommendations.',
+            '<b>Email backup:</b> Email summary sent in parallel with push notification. Includes full detail that doesn\u2019t fit in push. Has "Review in App" deep link.',
+            '<b>Lock screen design:</b> Mimics iOS notification style with frosted glass cards. OKX branding via the #CDFF00 icon. Two action buttons: Review (deep links to recovery screen) and Dismiss.',
+            '<b>"While you sleep" narrative:</b> This is the signature user story for AI PAW marketing. A user sleeps through a crash and wakes up protected. Binance AI Pro users wake up to losses.'
+          ]
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'transfer', label: 'Transfer', icon: '&#128176;', num: '06',
+    phase: 'p1', hasOptions: false,
+    steps: [
+      { label: 'Add Funds', sub: 'Main Account to AI PAW sub-account',
+        screen: function(o){ return scTransferAdd(); },
+        notes: {
+          stepLabel: 'Flow 06 \u2014 Transfer Funds',
+          title: 'Add Funds to AI PAW Sub-Account',
+          actor: 'user', actorDesc: 'User transfers USDT from Main Account to AI PAW',
+          desc: 'Transfer screen with toggle between Add Funds and Transfer Out. Default direction is Main Account \u2192 AI PAW Sub-Account. Amount input defaults to $5,000. Quick amount buttons ($1K, $5K, $10K, MAX) allow fast selection. The gatedAddFunds() function checks hasPaid before allowing the transfer \u2014 if the user has not subscribed, they are redirected to the Subscription Paywall first.',
+          keys: [
+            '<b>API:</b> POST /api/v1/transfer { from: "main", to: "ai-paw-sub", amount: 5000, currency: "USDT" }',
+            '<b>Paywall gate:</b> gatedAddFunds() checks hasPaid. If false \u2192 Subscription Paywall. If true \u2192 proceed with transfer.',
+            '<b>Sub-account isolation:</b> AI PAW sub-account is a separate ledger entry. Funds in this account are only accessible by AI PAW agents. This protects the user\u2019s main balance.',
+            '<b>Quick amounts:</b> $1K, $5K, $10K are pre-set. MAX transfers entire available Main Account balance. $5K is pre-selected as the recommended starting amount.',
+            '<b>Minimum amount:</b> $100 USDT minimum transfer. Below this, agent diversification is not effective.'
+          ]
+        }
+      },
+      { label: 'Transfer Success', sub: 'Confirmation, balance update',
+        screen: function(o){ return scTransferSuccess(); },
+        notes: {
+          stepLabel: 'Flow 06 \u2014 Transfer Funds',
+          title: 'Transfer Complete',
+          actor: 'system', actorDesc: 'System confirms fund transfer to AI PAW sub-account',
+          desc: 'Green checkmark confirmation. Balance updates immediately on both Main Account and AI PAW Sub-Account. If a strategy is currently active, the agent team automatically recalculates allocation based on the new balance. For example, if the strategy was 40% BTC and $5,000 was added, the Strategist may recommend buying an additional $2,000 of BTC to maintain the 40% target.',
+          keys: [
+            '<b>Immediate balance update:</b> No settlement delay for internal transfers. Both accounts reflect new balance instantly.',
+            '<b>Agent recalculation:</b> If strategy is active, Strategist agent receives a FUNDS_ADDED event and recalculates allocation. May trigger new trades to rebalance.',
+            '<b>"Back to Dashboard" CTA:</b> Returns to Main Dashboard (Flow 4, step 1) with updated balance.',
+            '<b>Transfer history:</b> All transfers logged in Activity section accessible from Dashboard Quick Actions.'
+          ]
+        }
+      }
+    ]
+  }
+];
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+var activeFlow = 0;
+var activeStep = 0;
+var activeOption = 1;
+
+// ════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════
+function setOption(o) {
+  activeOption = o;
+  document.getElementById('ot1').className = o === 1 ? 'ot-btn a1' : 'ot-btn';
+  document.getElementById('ot2').className = o === 2 ? 'ot-btn a2' : 'ot-btn';
+  renderScreen();
+  renderNotes();
+}
+
+function renderScreen() {
+  var flow = flows[activeFlow];
+  var step = flow.steps[activeStep];
+  var phoneWrap = document.getElementById('phone-wrap');
+  var diagWrap = document.getElementById('diag-wrap');
+  var optLabel = document.getElementById('opt-label-el');
+  var optToggle = document.getElementById('opt-toggle');
+
+  if (flow.isDiagram) {
+    phoneWrap.style.display = 'none';
+    diagWrap.style.display = 'block';
+    diagWrap.innerHTML = step.screen(activeOption);
+    optLabel.style.display = 'none';
+    optToggle.style.display = 'none';
+    return;
+  }
+
+  phoneWrap.style.display = 'flex';
+  diagWrap.style.display = 'none';
+
+  var scr = document.getElementById('phone-screen');
+  scr.style.opacity = '0';
+  var o = activeOption;
+  setTimeout(function() {
+    scr.innerHTML = step.screen(o);
+    scr.style.opacity = '1';
+  }, 100);
+
+  if (flow.hasOptions && !step.notes.same) {
+    optLabel.style.display = 'block';
+    optLabel.className = 'opt-label ' + (activeOption === 1 ? 'o1' : 'o2');
+    optLabel.textContent = activeOption === 1 ? 'Option 1' : 'Option 2';
+    optToggle.style.display = 'flex';
+  } else {
+    optLabel.style.display = 'none';
+    optToggle.style.display = 'none';
+  }
+}
+
+function renderNotes() {
+  var flow = flows[activeFlow];
+  var step = flow.steps[activeStep];
+  var n = step.notes;
+
+  document.getElementById('notes-step-label').textContent = n.stepLabel || '';
+  document.getElementById('notes-title').textContent = n.title || '';
+
+  var actorColors = { user: 'ac-user', system: 'ac-sys', both: 'ac-both', PM: 'ac-both' };
+  var actorLabels = { user: 'User Action', system: 'System', both: 'User + System', PM: 'PM Reference' };
+  var ar = document.getElementById('notes-actor');
+  ar.innerHTML = '<div class="actor-chip ' + (actorColors[n.actor] || 'ac-both') + '">' + (actorLabels[n.actor] || n.actor) + '</div>'
+    + '<div class="actor-desc">' + (n.actorDesc || '') + '</div>';
+
+  var html = '';
+  if (n.desc) {
+    html += '<div class="n-section"><div class="n-sec-label">What Happens</div><div class="n-body">' + n.desc + '</div></div>';
+  }
+
+  if (n.opt1 && n.opt2) {
+    html += '<div class="n-section"><div class="n-sec-label">Option Comparison <span class="tag tag-diff">Differs</span></div>'
+      + '<div class="diff-block"><div class="db-header d1">Option 1</div><div class="db-body">' + n.opt1.body + '</div></div>'
+      + '<div class="diff-block"><div class="db-header d2">Option 2</div><div class="db-body">' + n.opt2.body + '</div></div>'
+      + '</div>';
+  } else if (n.same) {
+    html += '<div class="n-section"><div class="n-sec-label">Option Comparison <span class="tag tag-same">Identical</span></div>'
+      + '<div class="n-body" style="color:#555;">Both options show the same screen at this step.</div></div>';
+  }
+
+  if (n.keys && n.keys.length) {
+    html += '<div class="n-section"><div class="n-sec-label">Design Notes</div><div class="key-list">';
+    for (var i = 0; i < n.keys.length; i++) {
+      html += '<div class="key-item"><div class="key-dot"></div><div class="kt">' + n.keys[i] + '</div></div>';
+    }
+    html += '</div></div>';
+  }
+
+  document.getElementById('notes-body').innerHTML = html;
+}
+
+function renderSidebar() {
+  var flow = flows[activeFlow];
+  document.getElementById('flow-label').textContent = 'Flow ' + flow.num + ' \u2014 ' + flow.label;
+  var phLabels  = { p1:'P1', p2:'P2', p3:'P3', future:'Future', ref:'Ref' };
+  var phClasses = { p1:'pb-p1', p2:'pb-p2', p3:'pb-p3', future:'pb-future', ref:'pb-ref' };
+  var html = '';
+  for (var i = 0; i < flow.steps.length; i++) {
+    var cls = i === activeStep ? ' active' : (i < activeStep ? ' done' : '');
+    var ph = flow.steps[i].phase || flow.phase;
+    var badge = ph ? '<span class="pbadge ' + phClasses[ph] + '">' + phLabels[ph] + '</span>' : '';
+    html += '<div class="si' + cls + '" onclick="goStep(' + i + ')">'
+      + '<div class="sn">' + (i + 1) + '</div>'
+      + '<div class="st"><div class="la">' + flow.steps[i].label + '</div><div class="su">' + flow.steps[i].sub + '</div>' + badge + '</div>'
+      + '</div>';
+  }
+  document.getElementById('step-list').innerHTML = html;
+}
+
+function renderFlowTabs() {
+  var html = '';
+  for (var i = 0; i < flows.length; i++) {
+    var cls = i === activeFlow ? ' active' : '';
+    html += '<div class="ftab' + cls + '" onclick="goFlow(' + i + ')">'
+      + '<div class="fi">' + flows[i].icon + '</div>'
+      + '<div><div class="fl">' + flows[i].num + '</div><div class="fn">' + flows[i].label + '</div></div>'
+      + '</div>';
+  }
+  document.getElementById('flow-tabs').innerHTML = html;
+}
+
+function renderNav() {
+  var flow = flows[activeFlow];
+  var total = flow.steps.length;
+  document.getElementById('nav-info').textContent = (activeStep + 1) + ' / ' + total;
+  document.getElementById('nav-flow-label').textContent = flow.label;
+  document.getElementById('btn-prev').disabled = activeStep === 0;
+  var btnNext = document.getElementById('btn-next');
+  if (activeStep === total - 1) {
+    btnNext.disabled = true;
+    btnNext.textContent = '\u2713 Done';
+  } else {
+    btnNext.disabled = false;
+    btnNext.innerHTML = 'Next \u2192';
+  }
+}
+
+function renderAll() {
+  renderFlowTabs();
+  renderSidebar();
+  renderScreen();
+  renderNotes();
+  renderNav();
+}
+
+function goFlow(i) {
+  activeFlow = i;
+  activeStep = 0;
+  activeOption = 1;
+  document.getElementById('ot1').className = 'ot-btn a1';
+  document.getElementById('ot2').className = 'ot-btn';
+  renderAll();
+}
+
+function goStep(i) {
+  activeStep = i;
+  renderSidebar();
+  renderScreen();
+  renderNotes();
+  renderNav();
+  document.getElementById('notes').scrollTop = 0;
+}
+
+function navigate(dir) {
+  var flow = flows[activeFlow];
+  var next = activeStep + dir;
+  if (next < 0 || next >= flow.steps.length) return;
+  activeStep = next;
+  renderSidebar();
+  renderScreen();
+  renderNotes();
+  renderNav();
+  document.getElementById('notes').scrollTop = 0;
+}
+
+// ── INIT ────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
